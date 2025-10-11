@@ -48,7 +48,7 @@
             color: var(--text-color);
             align-self: flex-start;
             width: 100%;
-            text-align: left;
+            text-align: center;
             margin-left: 10px;
         }
 
@@ -325,7 +325,7 @@
             position: fixed;
             top: 0; 
             width: 25vw; 
-            height: 30vh;
+            height: 5vh;
             z-index: 999; 
             cursor: pointer;
             -webkit-tap-highlight-color: transparent;
@@ -357,6 +357,76 @@
             14% { transform: rotate(0deg) scale(0.1); opacity: 0; }
             100% { transform: rotate(720deg) scale(1); opacity: 1; }
         }
+        
+        /* --- Modal Styles (for Desktop Workaround) --- */
+        #codeModalBackdrop {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        #codeModalBackdrop.visible {
+            display: flex;
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        #codeModalPanel {
+            position: relative;
+            width: 80%;
+            max-width: 650px;
+            max-height: 80vh;
+            overflow: hidden;
+            border-radius: 8px;
+            padding: 20px;
+            box-sizing: border-box;
+
+            background-color: rgba(255, 255, 255, 0.15);
+            border: 1.5px solid rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+
+            color: var(--text-color);
+            transition: all 0.3s ease-in-out;
+            transform: scale(0.95);
+            display: flex;
+            flex-direction: column;
+        }
+
+        body.light-theme #codeModalPanel {
+            background-color: rgba(0, 0, 0, 0.1);
+            border: 1.5px solid rgba(0, 0, 0, 0.3);
+        }
+
+        #codeModalBackdrop.visible #codeModalPanel {
+            transform: scale(1);
+        }
+
+        #codeModalPanel #codeOutputContainer {
+            margin-top: 0 !important;
+            padding: 0 !important;
+            border: none !important;
+            background-color: transparent !important;
+            max-height: 100%;
+        }
+
+        #codeModalPanel #codeOutput {
+            height: calc(80vh - 100px);
+            resize: none !important;
+            overflow: auto;
+        }
+
 
         /* --- Desktop View --- */
         @media (min-width: 769px) {
@@ -433,6 +503,22 @@
                 height: 250px; 
             }
 
+            /* Desktop Modal Specific Styles */
+            #codeOutputContainer:not(.is-modal) {
+                height: 50px !important;
+                overflow: hidden !important;
+                padding: 10px !important;
+                border-top: 2px solid var(--border-color) !important;
+            }
+            #codeOutputContainer:not(.is-modal) #codeOutput {
+                display: none !important;
+            }
+            #codeOutputContainer:not(.is-modal) #codeHeader {
+                border-bottom: none !important;
+                padding: 0px; 
+            }
+            /* End Desktop Modal Specific Styles */
+
 
             .value-input, select {
                 width: 50px; 
@@ -502,7 +588,6 @@
                 border-top: none; 
             }
             
-            /* Force controls after Filter Type (3rd and onwards) to take full width */
             .controls-container > .control-group:nth-child(n+3), 
             .action-button-group {
                 grid-column: 1 / -1; 
@@ -520,7 +605,7 @@
 </head>
 <body id="body">
 
-    <h1 id="globalTitle">./SYNTH</h1>
+    <h1 id="globalTitle">./SYNTH.</h1>
 
     <div class="main-layout">
         <div class="controls-code-column">
@@ -626,12 +711,20 @@
     <div class="corner-button" id="leftCornerBtn"></div>
     <div class="corner-button" id="rightCornerBtn"></div>
 
+    <div id="codeModalBackdrop" class="hidden">
+        <div id="codeModalPanel">
+        </div>
+    </div>
+
+    <footer style="z-index: 5; text-align: center; margin-top: 20px; color: #555; padding: 10px; position: relative;"><span id="revealTrigger" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; cursor: pointer; z-index: 15; opacity: 0; pointer-events: none;"></span><a href="https://xetsue.github.io/" target="_blank" rel="noopener noreferrer" id="targetLink" style="color: inherit; text-decoration: none; opacity: 1; pointer-events: auto; transition: opacity 0.5s ease-in-out; z-index: 10;">xetsue.github.io</a></footer><script>document.addEventListener('DOMContentLoaded', function() { const trigger = document.getElementById('revealTrigger'); const link = document.getElementById('targetLink'); const hideLink = () => { link.style.opacity = '0'; link.style.pointerEvents = 'none'; trigger.style.opacity = '1'; trigger.style.pointerEvents = 'auto'; }; setTimeout(hideLink, 1500); trigger.addEventListener('click', function() { link.style.opacity = '1'; link.style.pointerEvents = 'auto'; trigger.style.opacity = '0'; trigger.style.pointerEvents = 'none'; setTimeout(hideLink, 2000); }); });</script>
+    
     <script>
         let audioContext;
         let analyser;
         let animationFrameId = null;
         let isLooping = false; 
         let currentOscillator = null; 
+        let originalCodeContainerParent = null;
 
         const DEFAULTS = {
             waveType: 'sine',
@@ -666,8 +759,13 @@
             sideButtons.classList.remove('left', 'right');
             sideButtons.classList.add(storedSide);
             
-            document.getElementById('codeOutputContainer').classList.add('minimized');
-            document.getElementById('codeOutput').style.display = 'none';
+            const codeOutputContainer = document.getElementById('codeOutputContainer');
+            originalCodeContainerParent = codeOutputContainer.parentElement;
+            
+            if (window.innerWidth < 769) {
+                 codeOutputContainer.classList.add('minimized');
+                 document.getElementById('codeOutput').style.display = 'none';
+            }
 
             drawBlankVisualizer();
 
@@ -726,16 +824,75 @@
             saveSettings();
         }
 
-        function toggleCodeView() {
-            const container = document.getElementById('codeOutputContainer');
-            const output = document.getElementById('codeOutput');
+        function openCodeModal() {
+            const backdrop = document.getElementById('codeModalBackdrop');
+            const panel = document.getElementById('codeModalPanel');
+            const codeOutputContainer = document.getElementById('codeOutputContainer');
             
-            const isMinimized = container.classList.contains('minimized');
+            codeOutputContainer.classList.add('is-modal');
+            panel.appendChild(codeOutputContainer);
             
-            container.classList.toggle('minimized', !isMinimized);
-            output.style.display = isMinimized ? 'block' : 'none';
-            output.readOnly = true; 
+            backdrop.classList.remove('hidden');
+            backdrop.classList.add('visible');
+
+            backdrop.addEventListener('click', closeModalOutside, false);
+
+            codeOutputContainer.classList.remove('minimized');
+            document.getElementById('codeOutput').style.display = 'block';
+            document.getElementById('codeHeader').style.borderBottom = '1px solid var(--border-color)';
+            document.getElementById('codeOutput').readOnly = true;
             document.getElementById('editBtn').textContent = '⌨';
+        }
+
+        function closeModalOutside(event) {
+            const backdrop = document.getElementById('codeModalBackdrop');
+            if (event.target === backdrop) {
+                closeCodeModal();
+            }
+        }
+
+        function closeCodeModal() {
+            const backdrop = document.getElementById('codeModalBackdrop');
+            const codeOutputContainer = document.getElementById('codeOutputContainer');
+
+            backdrop.classList.remove('visible');
+            backdrop.classList.add('hidden');
+            backdrop.removeEventListener('click', closeModalOutside, false);
+
+            if (originalCodeContainerParent) {
+                originalCodeContainerParent.appendChild(codeOutputContainer);
+            }
+            codeOutputContainer.classList.remove('is-modal');
+            
+            if (window.innerWidth >= 769) {
+                 codeOutputContainer.classList.add('minimized');
+                 document.getElementById('codeOutput').style.display = 'none';
+            }
+        }
+
+        function toggleCodeView() {
+            // Desktop behavior: open/close modal
+            if (window.innerWidth >= 769) {
+                const backdrop = document.getElementById('codeModalBackdrop');
+                if (backdrop.classList.contains('visible')) {
+                    closeCodeModal();
+                } else {
+                    openCodeModal();
+                }
+            } else {
+                // Mobile behavior: expand/collapse in place
+                const container = document.getElementById('codeOutputContainer');
+                const header = document.getElementById('codeHeader');
+                if (container.classList.contains('minimized')) {
+                    container.classList.remove('minimized');
+                    document.getElementById('codeOutput').style.display = 'block';
+                    header.style.borderBottom = '1px solid var(--border-color)';
+                } else {
+                    document.getElementById('codeOutput').style.display = 'none';
+                    container.classList.add('minimized');
+                    header.style.borderBottom = 'none';
+                }
+            }
         }
 
         function stopCurrentSound() {
