@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>./SYNTH</title>
+    <style>
+        :root {
+            --bg-color: black;
+            --code-bg-color: #1a1a1a;
+            --text-color: white;
+            --border-color: white;
+            --op-bg-color: white;
+            --op-text-color: black;
+            --loop-color: #4CAF50; 
+        }
+
+        body.light-theme {
+            --bg-color: white;
+            --code-bg-color: #f0f0f0;
+            --text-color: black;
+            --border-color: black;
+            --op-bg-color: black;
+            --op-text-color: white;
+            --loop-color: #2E7D32; 
+            -webkit-tap-highlight-color: rgba(0,0,0,0.1);
+        }
+
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Monospace', monospace;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            -webkit-tap-highlight-color: transparent;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        #globalTitle {
+            font-size: 1.5em;
+            margin: 0 0 20px 0;
+            font-weight: bold;
+            color: var(--text-color);
+            align-self: flex-start;
+            width: 100%;
+            text-align: left;
+            margin-left: 10px;
+        }
+
+        .main-layout {
+            width: 100%;
+            max-width: 1400px; 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+            padding-top: 0;
+        }
+
+        .controls-code-column {
+            width: 100%;
+            max-width: 700px;
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+
+        #visualizer-container {
+            width: 100%;
+            margin-bottom: 30px; 
+            box-sizing: border-box;
+        }
+
+        #visualizer {
+            background-color: var(--code-bg-color);
+            border: 1.7px solid var(--border-color);
+            width: 100%;
+            height: 100px;
+            box-sizing: border-box;
+        }
+
+        .controls-container {
+            background-color: var(--bg-color);
+            border: 1.7px solid var(--border-color);
+            padding: 20px;
+            border-radius: 0;
+            width: 100%;
+            box-sizing: border-box;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px 30px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9em;
+        }
+
+        .value-input-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            width: 100%;
+        }
+
+        input[type="range"] {
+            flex-grow: 1;
+            margin: 0;
+            -webkit-appearance: none;
+            background: var(--border-color);
+            height: 2px;
+            cursor: pointer;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 10px;
+            height: 10px;
+            border-radius: 0;
+            background: var(--text-color);
+            border: 1px solid var(--border-color);
+        }
+
+        .value-input, select {
+            width: 70px;
+            padding: 5px;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            font-family: monospace;
+            font-size: 0.9em;
+            text-align: right;
+            border-radius: 4px;
+        }
+        
+        select {
+            width: 100%;
+            box-sizing: border-box;
+            border-radius: 4px;
+            text-align: left;
+            text-align-last: left;
+            min-width: 120px;
+        }
+
+        .action-button-group {
+            grid-column: 1 / -1;
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        #playBtn {
+            flex-grow: 1;
+            padding: 10px 20px;
+            font-size: 1.1em;
+            background-color: var(--op-bg-color);
+            color: var(--op-text-color);
+            border: 2px solid var(--border-color);
+            cursor: pointer;
+            font-family: 'Monospace', monospace;
+            border-radius: 8px;
+            transition: all 0.1s;
+        }
+
+        #loopBtn {
+            width: 40px;
+            height: 40px;
+            padding: 0;
+            font-size: 1.1em;
+            background-color: var(--op-bg-color);
+            color: var(--op-text-color);
+            border: 2px solid var(--border-color);
+            cursor: pointer;
+            font-family: 'Monospace', monospace;
+            border-radius: 50%; 
+            flex-shrink: 0;
+            transition: all 0.1s;
+        }
+
+        #loopBtn.active {
+            background-color: var(--loop-color);
+            color: var(--op-bg-color);
+            border-color: var(--loop-color);
+        }
+        
+        #playBtn:active:not(:disabled), #loopBtn:active:not(.active) {
+            filter: invert(100%);
+        }
+        #loopBtn.active:active {
+            filter: brightness(80%);
+        }
+        #playBtn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        #codeOutputContainer {
+            background-color: var(--code-bg-color);
+            border: 2px solid var(--border-color);
+            padding: 15px;
+            border-radius: 0;
+            width: 100%;
+            margin-top: 30px;
+            margin-bottom: 0; 
+            box-sizing: border-box;
+            transition: all 0.3s ease-in-out;
+        }
+        
+        #codeOutputContainer.minimized {
+            height: 50px; 
+            overflow: hidden;
+            padding: 0 15px;
+        }
+
+        #codeHeader {
+            display: flex;
+            justify-content: space-between;
+            align-items: center; 
+            cursor: pointer;
+            user-select: none;
+            height: 100%; 
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        #codeOutputContainer.minimized #codeHeader {
+             border-bottom: none; 
+        }
+        
+        #codeHeader div {
+            display: flex;
+            gap: 10px;
+            height: 100%; 
+            align-items: center; 
+        }
+
+        #codeOutput {
+            width: 100%;
+            height: 250px;
+            border: none;
+            background: none;
+            color: var(--text-color);
+            font-family: monospace;
+            font-size: 12px;
+            resize: vertical;
+            padding: 10px 0 0 0;
+            box-sizing: border-box;
+            line-height: 1.4;
+            display: block;
+            border-radius: 0;
+            transition: all 0.2s;
+        }
+
+        .code-action-btn {
+            width: 30px;
+            height: 30px;
+            border-radius: 4px; 
+            background-color: transparent; 
+            border: 1.5px solid var(--border-color); 
+            color: var(--text-color);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            font-family: 'Monospace', monospace;
+            box-sizing: border-box;
+            font-size: 14px;
+            line-height: 1;
+            transition: all 0.3s;
+        }
+        
+        .code-action-btn:active {
+            filter: invert(100%);
+        }
+
+        .side-buttons-container {
+            position: fixed;
+            top: 20px;
+            z-index: 1000; 
+            display: flex;
+            flex-direction: row;
+            gap: 10px;
+            transition: left 0.5s, right 0.5s;
+        }
+
+        .side-buttons-container.right {
+            right: 20px;
+            left: unset;
+        }
+        
+        .side-buttons-container.left {
+            left: 20px;
+            right: unset;
+        }
+        
+        .side-buttons-container .action-btn {
+            width: 40px;
+            height: 40px;
+            font-size: 18px;
+            border-radius: 50%;
+            
+            background-color: var(--op-bg-color);
+            border: 1.7px solid var(--op-bg-color); 
+            color: var(--op-text-color);
+            
+            transform-origin: center center;
+            transition: all 0.1s;
+        }
+
+        .corner-button {
+            position: fixed;
+            top: 0; 
+            width: 25vw; 
+            height: 30vh;
+            z-index: 999; 
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        #leftCornerBtn {
+            left: 0;
+        }
+        
+        #rightCornerBtn {
+            right: 0;
+        }
+
+        .animate-spin-out {
+            animation: spinShrinkDisappear 0.5s forwards;
+        }
+        
+        .animate-spin-in {
+            animation: spinGrowAppear 0.5s forwards;
+        }
+
+        @keyframes spinShrinkDisappear {
+            0% { transform: rotate(0deg) scale(1); opacity: 1; }
+            100% { transform: rotate(-720deg) scale(0); opacity: 0; }
+        }
+        
+        @keyframes spinGrowAppear {
+            0% { transform: rotate(0deg) scale(0); opacity: 0; }
+            14% { transform: rotate(0deg) scale(0.1); opacity: 0; }
+            100% { transform: rotate(720deg) scale(1); opacity: 1; }
+        }
+
+        /* --- Desktop View --- */
+        @media (min-width: 769px) {
+            body {
+                padding: 40px;
+            }
+            #globalTitle {
+                margin: 0 0 40px 0;
+                align-self: center;
+                text-align: center;
+                max-width: 1400px;
+            }
+
+            .main-layout {
+                flex-direction: column; 
+                align-items: center;
+                gap: 0;
+            }
+
+            .controls-code-column {
+                display: flex;
+                flex-direction: row; 
+                gap: 50px;
+                max-width: 1050px;
+                width: 100%;
+                padding-top: 20px;
+            }
+            
+            /* Visualizer on Left */
+            #visualizer-container {
+                order: 1; 
+                width: 450px;
+                max-width: 450px;
+                height: 490px; 
+                margin-top: 20px;
+                padding: 0;
+                flex-shrink: 0;
+                align-self: flex-start;
+                border: 2px solid var(--border-color);
+            }
+            #visualizer {
+                height: 100%;
+                border: none;
+            }
+
+            /* Wrapper for Controls and Code Output on Right */
+            .controls-group-right {
+                order: 2; 
+                display: flex;
+                flex-direction: column; 
+                gap: 30px;
+                width: 550px;
+                max-width: 550px;
+                flex-grow: 1;
+                padding-top: 20px; 
+            }
+
+            .controls-container {
+                grid-template-columns: 1fr 1fr;
+                gap: 15px 20px;
+                border: 2px solid var(--border-color);
+                margin-top: 0;
+                border-top: 2px solid var(--border-color);
+                order: 1;
+            }
+            
+            #codeOutputContainer {
+                order: 2;
+                margin-top: 0;
+                width: 100%;
+            }
+            
+            #codeOutput {
+                height: 250px; 
+            }
+
+
+            .value-input, select {
+                width: 50px; 
+            }
+            
+            .value-input-group {
+                gap: 5px; 
+            }
+        }
+
+        /* --- Mobile View --- */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px 10px 100px 10px; 
+            }
+            
+            #globalTitle {
+                margin-left: 10px; 
+                margin-bottom: 15px;
+            }
+            
+            .side-buttons-container {
+                top: 5px;
+                left: 10px;
+                right: unset;
+                bottom: unset;
+            }
+            
+            .side-buttons-container.right {
+                right: 10px;
+                left: unset;
+            }
+            
+            .side-buttons-container .action-btn {
+                width: 35px;
+                height: 35px;
+            }
+            
+            .controls-code-column {
+                flex-direction: column; 
+                gap: 0;
+                max-width: 100%;
+                width: 100%;
+            }
+
+            /* Visualizer top-most, inside control panel */
+            #visualizer-container {
+                order: -1; 
+                margin-bottom: 0; 
+                padding: 10px;
+                border: 1.7px solid var(--border-color);
+                border-bottom: none;
+                height: 150px;
+                max-width: 100%;
+            }
+            #visualizer {
+                height: 100%;
+                border: none;
+            }
+
+            /* Wave/Filter side-by-side (2 columns) */
+            .controls-container {
+                order: 0; 
+                grid-template-columns: 1fr 1fr; 
+                padding: 20px 10px;
+                gap: 12px 10px;
+                border-top: none; 
+            }
+            
+            /* Force controls after Filter Type (3rd and onwards) to take full width */
+            .controls-container > .control-group:nth-child(n+3), 
+            .action-button-group {
+                grid-column: 1 / -1; 
+            }
+
+            #codeOutputContainer {
+                margin-top: 30px;
+            }
+            
+            .value-input, select {
+                width: 70px;
+            }
+        }
+    </style>
+</head>
+<body id="body">
+
+    <h1 id="globalTitle">./SYNTH</h1>
+
+    <div class="main-layout">
+        <div class="controls-code-column">
+            
+            <div id="visualizer-container">
+                <canvas id="visualizer"></canvas>
+            </div>
+
+            <div class="controls-group-right"> 
+                <div class="controls-container">
+                    
+                    <div class="control-group">
+                        <label for="waveType">Wave Type</label>
+                        <select id="waveType" oninput="generateCode()"></select>
+                    </div>
+
+                    <div class="control-group">
+                        <label for="filterType">Filter Type</label>
+                        <select id="filterType" oninput="generateCode()"></select>
+                    </div>
+
+                    <div class="control-group">
+                        <label for="startFreq">Start Frequency (Hz)</label>
+                        <div class="value-input-group">
+                            <input type="range" id="startFreq" min="50" max="4000" step="1" value="1000" data-link="startFreqInput" oninput="linkSlider(this); generateCode()">
+                            <input type="number" id="startFreqInput" class="value-input" min="50" max="4000" step="1" value="1000" data-link="startFreq" oninput="linkInput(this); generateCode()">
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <label for="endFreq">End Frequency (Hz)</label>
+                        <div class="value-input-group">
+                            <input type="range" id="endFreq" min="50" max="4000" step="1" value="1000" data-link="endFreqInput" oninput="linkSlider(this); generateCode()">
+                            <input type="number" id="endFreqInput" class="value-input" min="50" max="4000" step="1" value="1000" data-link="endFreq" oninput="linkInput(this); generateCode()">
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <label for="audioDuration">Audio Duration (s)</label>
+                        <div class="value-input-group">
+                            <input type="range" id="audioDuration" min="0.1" max="5.0" step="0.1" value="0.7" data-link="audioDurationInput" oninput="linkSlider(this); generateCode()">
+                            <input type="number" id="audioDurationInput" class="value-input" min="0.1" max="5.0" step="0.1" value="0.7" data-link="audioDuration" oninput="linkInput(this); generateCode()">
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <label for="decayTime">Decay Time (s)</label>
+                        <div class="value-input-group">
+                            <input type="range" id="decayTime" min="0.01" max="0.5" step="0.01" value="0.07" data-link="decayTimeInput" oninput="linkSlider(this); generateCode()">
+                            <input type="number" id="decayTimeInput" class="value-input" min="0.01" max="0.5" step="0.01" value="0.07" data-link="decayTime" oninput="linkInput(this); generateCode()">
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <label for="attackTime">Attack Time (s)</label>
+                        <div class="value-input-group">
+                            <input type="range" id="attackTime" min="0.001" max="0.1" step="0.001" value="0.005" data-link="attackTimeInput" oninput="linkSlider(this); generateCode()">
+                            <input type="number" id="attackTimeInput" class="value-input" min="0.001" max="0.1" step="0.001" value="0.005" data-link="attackTime" oninput="linkInput(this); generateCode()">
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <label for="filterFreq">Filter Frequency (Hz)</label>
+                        <div class="value-input-group">
+                            <input type="range" id="filterFreq" min="20" max="4000" step="1" value="4000" data-link="filterFreqInput" oninput="linkSlider(this); generateCode()">
+                            <input type="number" id="filterFreqInput" class="value-input" min="20" max="4000" step="1" value="4000" data-link="filterFreq" oninput="linkInput(this); generateCode()">
+                        </div>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="filterQ">Filter Q (Resonance)</label>
+                        <div class="value-input-group">
+                            <input type="range" id="filterQ" min="0.1" max="30" step="0.1" value="1.0" data-link="filterQInput" oninput="linkSlider(this); generateCode()">
+                            <input type="number" id="filterQInput" class="value-input" min="0.1" max="30" step="0.1" value="1.0" data-link="filterQ" oninput="linkInput(this); generateCode()">
+                        </div>
+                    </div>
+
+                    <div class="action-button-group">
+                        <button id="loopBtn" onclick="toggleLoop()"><b>∞</b></button>
+                        <button id="playBtn" onclick="playCustomSound()">SOUND</button>
+                    </div>
+                </div>
+
+                <div id="codeOutputContainer" class="minimized">
+                    <div id="codeHeader" onclick="toggleCodeView()">
+                        <span style="font-size: 1.1em;">Code Script (.js) </span>
+                        <div>
+                            <button class="code-action-btn" id="editBtn" onclick="editCode(event)">⌨</button>
+                            <button class="code-action-btn" onclick="copyCode(event)">⛶</button>
+                        </div>
+                    </div>
+                    <textarea id="codeOutput" readonly></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="side-buttons-container left" id="sideButtons">
+        <button class="action-btn" id="resetBtn" onclick="resetButtonAction(event)">⊘</button>
+        <button class="action-btn" id="themeToggleBtn" onclick="toggleTheme()">⽉</button>
+    </div>
+
+    <div class="corner-button" id="leftCornerBtn"></div>
+    <div class="corner-button" id="rightCornerBtn"></div>
+
+    <script>
+        let audioContext;
+        let analyser;
+        let animationFrameId = null;
+        let isLooping = false; 
+        let currentOscillator = null; 
+
+        const DEFAULTS = {
+            waveType: 'sine',
+            filterType: 'lowpass',
+            startFreq: 1000,
+            endFreq: 1000,
+            audioDuration: 0.7, 
+            decayTime: 0.07,
+            attackTime: 0.005,
+            filterFreq: 4000,
+            filterQ: 1.0
+        };
+
+        const WAVE_OPTIONS = ['sine', 'square', 'sawtooth', 'triangle'];
+        const FILTER_OPTIONS = ['lowpass', 'highpass', 'bandpass', 'notch'];
+
+        function initSelects() {
+            const waveSelect = document.getElementById('waveType');
+            const filterSelect = document.getElementById('filterType');
+            WAVE_OPTIONS.forEach(opt => waveSelect.options.add(new Option(opt.charAt(0).toUpperCase() + opt.slice(1), opt)));
+            FILTER_OPTIONS.forEach(opt => filterSelect.options.add(new Option(opt.charAt(0).toUpperCase() + opt.slice(1), opt)));
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initSelects();
+            loadSettings();
+            generateCode();
+            
+            const sideButtons = document.getElementById('sideButtons');
+            const storedSide = localStorage.getItem('synthButtonSide') || 'left'; 
+            
+            sideButtons.classList.remove('left', 'right');
+            sideButtons.classList.add(storedSide);
+            
+            document.getElementById('codeOutputContainer').classList.add('minimized');
+            document.getElementById('codeOutput').style.display = 'none';
+
+            drawBlankVisualizer();
+
+            document.getElementById('leftCornerBtn').addEventListener('click', () => {
+                const isCurrentlyRight = sideButtons.classList.contains('right');
+                if (isCurrentlyRight) { 
+                    toggleButtonSide('left');
+                }
+            });
+
+            document.getElementById('rightCornerBtn').addEventListener('click', () => {
+                const isCurrentlyLeft = sideButtons.classList.contains('left');
+                if (isCurrentlyLeft) { 
+                    toggleButtonSide('right');
+                }
+            });
+            
+            const storedLoop = localStorage.getItem('synthLoop') === 'true';
+            isLooping = storedLoop;
+            document.getElementById('loopBtn').classList.toggle('active', isLooping);
+            document.getElementById('playBtn').disabled = isLooping; 
+        });
+
+        function drawBlankVisualizer() {
+             const canvas = document.getElementById('visualizer');
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+            const canvasCtx = canvas.getContext('2d');
+            
+            const style = getComputedStyle(document.body);
+            const bgColor = style.getPropertyValue('--code-bg-color');
+            
+            canvasCtx.fillStyle = bgColor;
+            canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        function initContext() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                analyser = audioContext.createAnalyser();
+                analyser.fftSize = 2048; 
+            }
+            if (audioContext.state === 'suspended') {
+                audioContext.resume();
+            }
+            return audioContext.currentTime;
+        }
+
+        function linkSlider(slider) {
+            document.getElementById(slider.dataset.link).value = slider.value;
+            saveSettings();
+        }
+        
+        function linkInput(input) {
+            document.getElementById(input.dataset.link).value = input.value;
+            saveSettings();
+        }
+
+        function toggleCodeView() {
+            const container = document.getElementById('codeOutputContainer');
+            const output = document.getElementById('codeOutput');
+            
+            const isMinimized = container.classList.contains('minimized');
+            
+            container.classList.toggle('minimized', !isMinimized);
+            output.style.display = isMinimized ? 'block' : 'none';
+            output.readOnly = true; 
+            document.getElementById('editBtn').textContent = '⌨';
+        }
+
+        function stopCurrentSound() {
+             if (currentOscillator) {
+                try {
+                    currentOscillator.stop();
+                } catch (e) {
+                }
+                currentOscillator.disconnect();
+                currentOscillator = null;
+            }
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+            }
+            drawBlankVisualizer();
+        }
+
+        function toggleLoop() {
+            isLooping = !isLooping;
+            localStorage.setItem('synthLoop', isLooping);
+            document.getElementById('loopBtn').classList.toggle('active', isLooping);
+            document.getElementById('playBtn').disabled = isLooping;
+
+            if (!isLooping) {
+                stopCurrentSound();
+            } else {
+                 playCustomSound();
+            }
+        }
+        
+        function playCustomSound() {
+            const playBtn = document.getElementById('playBtn');
+            if (!isLooping && playBtn.disabled) return;
+
+            stopCurrentSound();
+            
+            if (!isLooping) {
+                playBtn.disabled = true;
+            }
+
+            const now = initContext();
+
+            const waveType = document.getElementById('waveType').value;
+            const filterType = document.getElementById('filterType').value;
+            const startFreq = parseFloat(document.getElementById('startFreqInput').value);
+            const endFreq = parseFloat(document.getElementById('endFreqInput').value);
+            const audioDuration = parseFloat(document.getElementById('audioDurationInput').value); 
+            const decayTime = parseFloat(document.getElementById('decayTimeInput').value);
+            const attackTime = parseFloat(document.getElementById('attackTimeInput').value);
+            const filterFreq = parseFloat(document.getElementById('filterFreqInput').value);
+            const filterQ = parseFloat(document.getElementById('filterQInput').value);
+            
+            const osc = audioContext.createOscillator();
+            const filter = audioContext.createBiquadFilter();
+            const gain = audioContext.createGain();
+
+            osc.type = waveType;
+            filter.type = filterType;
+            
+            osc.connect(filter);
+            filter.connect(gain);
+            gain.connect(analyser);
+            analyser.connect(audioContext.destination);
+            
+            filter.frequency.setValueAtTime(filterFreq, now);
+            filter.Q.setValueAtTime(filterQ, now);
+
+
+            if (isLooping) {
+                osc.loop = true; 
+                osc.loopStart = 0;
+                osc.loopEnd = audioDuration;
+
+                osc.frequency.setValueAtTime(startFreq, now); 
+                osc.frequency.linearRampToValueAtTime(endFreq, now + audioDuration);
+                
+                gain.gain.setValueAtTime(0.0, now);
+                gain.gain.linearRampToValueAtTime(0.5, now + attackTime);
+                gain.gain.setTargetAtTime(0.5, now + attackTime, 0.001); 
+                
+                osc.start(now);
+                
+            } else {
+                osc.loop = false;
+                
+                osc.frequency.setValueAtTime(startFreq, now);
+                osc.frequency.linearRampToValueAtTime(endFreq, now + audioDuration);
+                
+                gain.gain.setValueAtTime(0.0, now);
+                gain.gain.linearRampToValueAtTime(0.5, now + attackTime);
+                gain.gain.exponentialRampToValueAtTime(0.0001, now + audioDuration);
+                
+                osc.start(now);
+                osc.stop(now + audioDuration + 0.05);
+
+                osc.onended = () => {
+                    playBtn.disabled = false;
+                    if (animationFrameId) {
+                        cancelAnimationFrame(animationFrameId);
+                        animationFrameId = null;
+                    }
+                    drawBlankVisualizer();
+                    osc.disconnect();
+                    filter.disconnect();
+                    gain.disconnect();
+                    currentOscillator = null;
+                };
+            }
+            
+            currentOscillator = osc; 
+            visualize();
+        }
+        
+        function visualize() {
+            if (!analyser) return;
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+            }
+
+            const canvas = document.getElementById('visualizer');
+            const canvasCtx = canvas.getContext('2d');
+            const style = getComputedStyle(document.body);
+            const bgColor = style.getPropertyValue('--code-bg-color');
+            const textColor = style.getPropertyValue('--text-color');
+            
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+            
+            const bufferLength = 512; 
+            const dataArray = new Uint8Array(bufferLength);
+            
+            const draw = () => {
+                if (!isLooping && !currentOscillator) {
+                     if (animationFrameId) {
+                        cancelAnimationFrame(animationFrameId);
+                        animationFrameId = null;
+                     }
+                     drawBlankVisualizer();
+                     return;
+                }
+
+                animationFrameId = requestAnimationFrame(draw);
+                
+                analyser.getByteFrequencyData(dataArray);
+
+                canvasCtx.fillStyle = bgColor;
+                canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
+
+                const barWidth = (canvas.width / bufferLength) * 2; 
+                let x = 0;
+
+                for(let i = 0; i < bufferLength; i++) {
+                    const normalizedValue = dataArray[i];
+                    const barHeight = (normalizedValue / 255) * canvas.height;
+                    
+                    canvasCtx.fillStyle = textColor;
+                    canvasCtx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
+
+                    x += barWidth + 1;
+                }
+            };
+            
+            draw();
+        }
+
+        function generateCode() {
+            const waveType = document.getElementById('waveType').value;
+            const filterType = document.getElementById('filterType').value;
+            const startFreq = parseFloat(document.getElementById('startFreqInput').value);
+            const endFreq = parseFloat(document.getElementById('endFreqInput').value);
+            const audioDuration = parseFloat(document.getElementById('audioDurationInput').value); 
+            const decayTime = parseFloat(document.getElementById('decayTimeInput').value);
+            const attackTime = parseFloat(document.getElementById('attackTimeInput').value);
+            const filterFreq = parseFloat(document.getElementById('filterFreqInput').value);
+            const filterQ = parseFloat(document.getElementById('filterQInput').value);
+
+            const code = `
+function createCustomTone(audioContext, isLooped = false) {
+    const now = audioContext.currentTime;
+    const osc = audioContext.createOscillator();
+    const filter = audioContext.createBiquadFilter();
+    const gain = audioContext.createGain();
+
+    const WAVE_TYPE = '${waveType}';
+    const FILTER_TYPE = '${filterType}';
+    const START_FREQ = ${startFreq.toFixed(3)};
+    const END_FREQ = ${endFreq.toFixed(3)};
+    const DURATION = ${audioDuration.toFixed(3)};
+    const DECAY_TIME = ${decayTime.toFixed(3)};
+    const ATTACK_TIME = ${attackTime.toFixed(3)};
+    const FILTER_FREQ = ${filterFreq.toFixed(3)};
+    const FILTER_Q = ${filterQ.toFixed(3)};
+    
+    osc.type = WAVE_TYPE;
+    filter.type = FILTER_TYPE;
+
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(audioContext.destination);
+    
+    filter.frequency.setValueAtTime(FILTER_FREQ, now);
+    filter.Q.setValueAtTime(FILTER_Q, now);
+
+    if (isLooped) {
+        osc.loop = true;
+        osc.loopStart = 0;
+        osc.loopEnd = DURATION;
+        
+        osc.frequency.setValueAtTime(START_FREQ, now); 
+        osc.frequency.linearRampToValueAtTime(END_FREQ, now + DURATION);
+
+        gain.gain.setValueAtTime(0.0, now);
+        gain.gain.linearRampToValueAtTime(0.5, now + ATTACK_TIME);
+        gain.gain.setTargetAtTime(0.5, now + ATTACK_TIME, 0.001); 
+
+    } else {
+        osc.loop = false;
+        
+        osc.frequency.setValueAtTime(START_FREQ, now);
+        osc.frequency.linearRampToValueAtTime(END_FREQ, now + DURATION);
+        
+        gain.gain.setValueAtTime(0.0, now);
+        gain.gain.linearRampToValueAtTime(0.5, now + ATTACK_TIME);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + DURATION);
+    }
+    
+
+    osc.start(now);
+    if (!isLooped) {
+        osc.stop(now + DURATION + 0.05);
+    }
+
+    osc.onended = () => {
+        osc.disconnect();
+        filter.disconnect();
+        gain.disconnect();
+    };
+    return osc;
+}
+`.trim();
+            document.getElementById('codeOutput').value = code;
+        }
+
+        function copyCode(e) {
+            e.stopPropagation();
+            const codeOutput = document.getElementById('codeOutput');
+            const isHidden = codeOutput.style.display === 'none';
+
+            if (isHidden) {
+                document.getElementById('codeOutputContainer').classList.remove('minimized');
+                codeOutput.style.display = 'block';
+            }
+
+            codeOutput.select();
+            document.execCommand('copy');
+            
+            if (isHidden) {
+                document.getElementById('codeOutputContainer').classList.add('minimized');
+                codeOutput.style.display = 'none';
+            }
+            
+            const btn = e.target;
+            const originalText = btn.textContent;
+            btn.textContent = '☻';
+            setTimeout(() => {
+                btn.textContent = originalText;
+            }, 1000);
+        }
+        
+        function editCode(e) {
+            e.stopPropagation();
+            const codeOutput = document.getElementById('codeOutput');
+            const editBtn = document.getElementById('editBtn');
+
+            if (codeOutput.readOnly) {
+                codeOutput.readOnly = false;
+                editBtn.textContent = '⎗'; 
+                
+                if (document.getElementById('codeOutputContainer').classList.contains('minimized')) {
+                    toggleCodeView();
+                }
+            } else {
+                const pastedCode = codeOutput.value;
+                const settings = parseCode(pastedCode);
+                
+                if (settings) {
+                    loadSettings(settings); 
+                    generateCode(); 
+                    editBtn.textContent = '⌨';
+                    codeOutput.readOnly = true;
+                    alert('Settings loaded from script!');
+                } else {
+                    alert('Could not parse settings. Please ensure the constants are correctly named (WAVE_TYPE, START_FREQ, DURATION, etc.) and try again.');
+                }
+            }
+        }
+        
+        function parseCode(code) {
+            const settings = {};
+            const regex = /const ([A-Z_]+) = (.+);/g;
+            let match;
+            
+            while ((match = regex.exec(code)) !== null) {
+                const name = match[1].toLowerCase().replace(/_(\w)/g, (m, c) => c.toUpperCase());
+                let value = match[2].trim().replace(/[';]/g, '');
+
+                if (name.includes('freq') || name.includes('time') || name.includes('q') || name === 'duration') {
+                    value = parseFloat(value);
+                }
+                settings[name] = value;
+            }
+
+            if (Object.keys(settings).length >= 9) {
+                return settings;
+            }
+            return null;
+        }
+
+        function toggleTheme() {
+            const btn = document.getElementById('themeToggleBtn');
+            const outSpinClass = 'animate-spin-out';
+            const inSpinClass = 'animate-spin-in';
+            
+            btn.classList.add(outSpinClass);
+
+            setTimeout(() => {
+                const isLight = document.body.classList.toggle('light-theme');
+                localStorage.setItem('synthTheme', isLight ? 'light' : 'dark');
+                drawBlankVisualizer(); 
+                
+                btn.classList.remove(outSpinClass);
+                btn.classList.add(inSpinClass);
+                
+                setTimeout(() => {
+                    btn.classList.remove(inSpinClass);
+                }, 500); 
+                
+            }, 500); 
+        }
+
+        function toggleButtonSide(targetDirection) {
+            const container = document.getElementById('sideButtons');
+            const currentSide = container.classList.contains('right') ? 'right' : 'left';
+            
+            if (targetDirection === currentSide) return;
+
+            const outSpinClass = 'animate-spin-out';
+            const inSpinClass = 'animate-spin-in';
+            const resetBtn = document.getElementById('resetBtn');
+            const themeBtn = document.getElementById('themeToggleBtn');
+            
+            resetBtn.classList.add(outSpinClass);
+            themeBtn.classList.add(outSpinClass);
+            
+            setTimeout(() => {
+                container.classList.remove('right', 'left');
+                container.classList.add(targetDirection);
+                localStorage.setItem('synthButtonSide', targetDirection);
+                
+                resetBtn.classList.remove(outSpinClass);
+                themeBtn.classList.remove(outSpinClass);
+                resetBtn.classList.add(inSpinClass);
+                themeBtn.classList.add(inSpinClass);
+                
+                setTimeout(() => {
+                    resetBtn.classList.remove(inSpinClass);
+                    themeBtn.classList.remove(inSpinClass);
+                }, 500); 
+            }, 500);
+        }
+        
+        function resetButtonAction(e) {
+            e.stopPropagation();
+            if (confirm('Are you sure you want to reset all synthesizer settings to default?')) {
+                localStorage.removeItem('synthSettings');
+                loadSettings(DEFAULTS);
+                generateCode();
+                
+                stopCurrentSound();
+                document.getElementById('playBtn').disabled = false;
+                isLooping = false;
+                document.getElementById('loopBtn').classList.remove('active');
+            }
+        }
+
+        function loadSettings(customSettings) {
+            let settings;
+
+            if (customSettings) {
+                settings = customSettings;
+            } else {
+                try {
+                    const savedSettings = localStorage.getItem('synthSettings');
+                    settings = savedSettings ? JSON.parse(savedSettings) : DEFAULTS;
+                } catch {
+                    settings = DEFAULTS;
+                }
+                
+                const savedTheme = localStorage.getItem('synthTheme');
+                if (savedTheme === 'light') {
+                    document.body.classList.add('light-theme');
+                } else if (savedTheme === 'dark') {
+                    document.body.classList.remove('light-theme');
+                }
+            }
+
+            document.getElementById('waveType').value = settings.waveType || DEFAULTS.waveType;
+            document.getElementById('filterType').value = settings.filterType || DEFAULTS.filterType;
+
+            document.getElementById('startFreq').value = document.getElementById('startFreqInput').value = settings.startFreq || DEFAULTS.startFreq;
+            document.getElementById('endFreq').value = document.getElementById('endFreqInput').value = settings.endFreq || DEFAULTS.endFreq;
+            document.getElementById('audioDuration').value = document.getElementById('audioDurationInput').value = settings.audioDuration || DEFAULTS.audioDuration;
+
+            document.getElementById('decayTime').value = document.getElementById('decayTimeInput').value = settings.decayTime || DEFAULTS.decayTime;
+            document.getElementById('attackTime').value = document.getElementById('attackTimeInput').value = settings.attackTime || DEFAULTS.attackTime;
+            document.getElementById('filterFreq').value = document.getElementById('filterFreqInput').value = settings.filterFreq || DEFAULTS.filterFreq;
+            document.getElementById('filterQ').value = document.getElementById('filterQInput').value = settings.filterQ || DEFAULTS.filterQ;
+        }
+
+        function saveSettings() {
+            const settings = {
+                waveType: document.getElementById('waveType').value,
+                filterType: document.getElementById('filterType').value,
+                startFreq: parseFloat(document.getElementById('startFreqInput').value),
+                endFreq: parseFloat(document.getElementById('endFreqInput').value),
+                audioDuration: parseFloat(document.getElementById('audioDurationInput').value), 
+                decayTime: parseFloat(document.getElementById('decayTimeInput').value),
+                attackTime: parseFloat(document.getElementById('attackTimeInput').value),
+                filterFreq: parseFloat(document.getElementById('filterFreqInput').value),
+                filterQ: parseFloat(document.getElementById('filterQInput').value)
+            };
+            localStorage.setItem('synthSettings', JSON.stringify(settings));
+        }
+        
+    </script>
+</body>
+</html>
