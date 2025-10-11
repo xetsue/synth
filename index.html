@@ -26,6 +26,28 @@
             -webkit-tap-highlight-color: rgba(0,0,0,0.1);
         }
 
+        body.retro-light-theme {
+            --bg-color: white;
+            --code-bg-color: #e0e0e0;
+            --text-color: #000000;
+            --border-color: #000000;
+            --op-bg-color: #e6e6e6;
+            --op-text-color: #000000;
+            --loop-color: #2da195;
+            font-family: 'MS Sans Serif', 'Arial', 'Monospace', sans-serif !important;
+        }
+
+        body.retro-dark-theme {
+            --bg-color: #333333;
+            --code-bg-color: #222222;
+            --text-color: #f0f0f0;
+            --border-color: #f0f0f0;
+            --op-bg-color: #333333;
+            --op-text-color: #f0f0f0;
+            --loop-color: #800000;
+            font-family: 'MS Sans Serif', 'Arial', 'Monospace', sans-serif !important;
+        }
+
         body {
             margin: 0;
             padding: 20px;
@@ -141,7 +163,7 @@
             background-color: var(--bg-color);
             color: var(--text-color);
             border: 1px solid var(--border-color);
-            font-family: monospace;
+            font-family: inherit;
             font-size: 0.9em;
             text-align: right;
             border-radius: 4px;
@@ -171,7 +193,7 @@
             color: var(--op-text-color);
             border: 2px solid var(--border-color);
             cursor: pointer;
-            font-family: 'Monospace', monospace;
+            font-family: inherit;
             border-radius: 8px;
             transition: all 0.1s;
         }
@@ -185,7 +207,7 @@
             color: var(--op-text-color);
             border: 2px solid var(--border-color);
             cursor: pointer;
-            font-family: 'Monospace', monospace;
+            font-family: inherit;
             border-radius: 50%; 
             flex-shrink: 0;
             transition: all 0.1s;
@@ -253,7 +275,7 @@
             border: none;
             background: none;
             color: var(--text-color);
-            font-family: monospace;
+            font-family: 'Monospace', monospace;
             font-size: 12px;
             resize: vertical;
             padding: 10px 0 0 0;
@@ -312,11 +334,9 @@
             height: 40px;
             font-size: 18px;
             border-radius: 50%;
-            
             background-color: var(--op-bg-color);
             border: 1.7px solid var(--op-bg-color); 
             color: var(--op-text-color);
-            
             transform-origin: center center;
             transition: all 0.1s;
         }
@@ -358,7 +378,6 @@
             100% { transform: rotate(720deg) scale(1); opacity: 1; }
         }
         
-        /* --- Modal Styles (for Desktop Workaround) --- */
         #codeModalBackdrop {
             display: none;
             position: fixed;
@@ -390,13 +409,11 @@
             border-radius: 8px;
             padding: 20px;
             box-sizing: border-box;
-
             background-color: rgba(255, 255, 255, 0.15);
             border: 1.5px solid rgba(255, 255, 255, 0.4);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
             box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
-
             color: var(--text-color);
             transition: all 0.3s ease-in-out;
             transform: scale(0.95);
@@ -405,7 +422,7 @@
         }
 
         body.light-theme #codeModalPanel {
-            background-color: rgba(0, 0, 0, 0.1);
+            background-color: rgba(255, 255, 255, 0.6);
             border: 1.5px solid rgba(0, 0, 0, 0.3);
         }
 
@@ -426,9 +443,64 @@
             resize: none !important;
             overflow: auto;
         }
+        
+        .retro-light-theme *, .retro-dark-theme * { transition: none !important; }
+        .retro-light-theme button, .retro-dark-theme button,
+        .retro-light-theme .code-action-btn, .retro-dark-theme .code-action-btn {
+            border-radius: 0;
+            border-style: outset;
+            border-width: 2px;
+            filter: none !important;
+        }
+        .retro-light-theme .side-buttons-container .action-btn, .retro-dark-theme .side-buttons-container .action-btn { border-radius: 0; border-style: outset; }
+        .retro-light-theme button:active:not(:disabled), .retro-dark-theme button:active:not(:disabled) { border-style: inset; }
+        .retro-light-theme #playBtn { border-radius: 0; border-style: outset; border-width: 2px; background-color: #dedede; color: black;}
+		.retro-dark-theme #playBtn { border-radius: 0; border-style: outset; border-width: 2px; background-color: #121212; color: white;}
+        .retro-light-theme #loopBtn, .retro-dark-theme #loopBtn { border-radius: 0; border-style: outset; border-width: 2px; background-color: white; color: black; border-color: var(--border-color);}
+        .retro-light-theme #loopBtn.active, .retro-dark-theme #loopBtn.active { border-style: outset; background-color: var(--loop-color); color: white; border-color: var(--border-color); }
+        .retro-light-theme .controls-container { border-radius: 0; border-style: groove; border-width: 2.5px;}
+		.retro-dark-theme .controls-container { border-radius: 0; border-style: outset; border-width: 2.5px; border-color: var(--border-color);}
+        .retro-light-theme #visualizer-container, .retro-dark-theme #visualizer-container,
+        .retro-light-theme #codeOutputContainer, .retro-dark-theme #codeOutputContainer {
+            border-style: inset;
+            border-width: 2.2px;
+        }
+        .retro-light-theme #visualizer, .retro-dark-theme #visualizer { border: 1px solid var(--border-color); }
+        .retro-light-theme input[type="text"], .retro-dark-theme input[type="text"],
+        .retro-light-theme input[type="number"], .retro-dark-theme input[type="number"],
+        .retro-light-theme select, .retro-dark-theme select {
+            border-radius: 0;
+            border-style: inset;
+            border-width: 2px;
+            background-color: var(--code-bg-color);
+        }
+        .retro-light-theme #codeModalPanel, .retro-dark-theme #codeModalPanel {
+            border-radius: 0;
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
+            background-color: var(--bg-color);
+            border: 2px outset var(--border-color);
+            box-shadow: none;
+        }
+        .retro-light-theme { --border-3d-light: #ffffff; --border-3d-dark: #808080; }
+        .retro-dark-theme { --border-3d-light: #555555; --border-3d-dark: #111111; }
+        .retro-light-theme .controls-container, .retro-dark-theme .controls-container,
+        .retro-light-theme #visualizer-container, .retro-dark-theme #visualizer-container,
+        .retro-light-theme #codeOutputContainer, .retro-dark-theme #codeOutputContainer,
+        .retro-light-theme select, .retro-dark-theme select,
+        .retro-light-theme .value-input, .retro-dark-theme .value-input {
+            border-color: var(--border-3d-dark) var(--border-3d-light) var(--border-3d-light) var(--border-3d-dark);
+        }
+        .retro-light-theme button, .retro-dark-theme button,
+        .retro-light-theme .code-action-btn, .retro-dark-theme .code-action-btn {
+            border-color: var(--border-3d-light) var(--border-3d-dark) var(--border-3d-dark) var(--border-3d-light);
+        }
+        .retro-light-theme button:active, .retro-dark-theme button:active,
+        .retro-light-theme #loopBtn.active, .retro-dark-theme #loopBtn.active {
+            border-color: var(--border-3d-dark) var(--border-3d-light) var(--border-3d-light) var(--border-3d-dark);
+        }
 
 
-        /* --- Desktop View --- */
         @media (min-width: 769px) {
             body {
                 padding: 40px;
@@ -455,7 +527,6 @@
                 padding-top: 20px;
             }
             
-            /* Visualizer on Left */
             #visualizer-container {
                 order: 1; 
                 width: 450px;
@@ -472,7 +543,6 @@
                 border: none;
             }
 
-            /* Wrapper for Controls and Code Output on Right */
             .controls-group-right {
                 order: 2; 
                 display: flex;
@@ -503,7 +573,6 @@
                 height: 250px; 
             }
 
-            /* Desktop Modal Specific Styles */
             #codeOutputContainer:not(.is-modal) {
                 height: 50px !important;
                 overflow: hidden !important;
@@ -517,8 +586,6 @@
                 border-bottom: none !important;
                 padding: 0px; 
             }
-            /* End Desktop Modal Specific Styles */
-
 
             .value-input, select {
                 width: 50px; 
@@ -529,7 +596,6 @@
             }
         }
 
-        /* --- Mobile View --- */
         @media (max-width: 768px) {
             body {
                 padding: 10px 10px 100px 10px; 
@@ -564,7 +630,6 @@
                 width: 100%;
             }
 
-            /* Visualizer top-most, inside control panel */
             #visualizer-container {
                 order: -1; 
                 margin-bottom: 0; 
@@ -579,7 +644,6 @@
                 border: none;
             }
 
-            /* Wave/Filter side-by-side (2 columns) */
             .controls-container {
                 order: 0; 
                 grid-template-columns: 1fr 1fr; 
@@ -706,6 +770,7 @@
     <div class="side-buttons-container left" id="sideButtons">
         <button class="action-btn" id="resetBtn" onclick="resetButtonAction(event)">⊘</button>
         <button class="action-btn" id="themeToggleBtn" onclick="toggleTheme()">⽉</button>
+        <button class="action-btn" id="exportBtn" onclick="exportAudio(event)">E</button>
     </div>
 
     <div class="corner-button" id="leftCornerBtn"></div>
@@ -740,6 +805,8 @@
 
         const WAVE_OPTIONS = ['sine', 'square', 'sawtooth', 'triangle'];
         const FILTER_OPTIONS = ['lowpass', 'highpass', 'bandpass', 'notch'];
+        const THEMES = ['default', 'light-theme', 'retro-dark-theme', 'retro-light-theme'];
+        let currentThemeIndex = 0;
 
         function initSelects() {
             const waveSelect = document.getElementById('waveType');
@@ -786,7 +853,15 @@
             const storedLoop = localStorage.getItem('synthLoop') === 'true';
             isLooping = storedLoop;
             document.getElementById('loopBtn').classList.toggle('active', isLooping);
-            document.getElementById('playBtn').disabled = isLooping; 
+            document.getElementById('playBtn').disabled = isLooping;
+
+            const savedTheme = localStorage.getItem('synthTheme') || 'default';
+            currentThemeIndex = THEMES.indexOf(savedTheme);
+            if (currentThemeIndex === -1) currentThemeIndex = 0;
+            const themeClass = THEMES[currentThemeIndex];
+            if (themeClass !== 'default') {
+                document.body.classList.add(themeClass);
+            }
         });
 
         function drawBlankVisualizer() {
@@ -871,7 +946,6 @@
         }
 
         function toggleCodeView() {
-            // Desktop behavior: open/close modal
             if (window.innerWidth >= 769) {
                 const backdrop = document.getElementById('codeModalBackdrop');
                 if (backdrop.classList.contains('visible')) {
@@ -880,7 +954,6 @@
                     openCodeModal();
                 }
             } else {
-                // Mobile behavior: expand/collapse in place
                 const container = document.getElementById('codeOutputContainer');
                 const header = document.getElementById('codeHeader');
                 if (container.classList.contains('minimized')) {
@@ -1007,6 +1080,148 @@
             visualize();
         }
         
+        function bufferToWav(buffer, opt) {
+            opt = opt || {};
+            const numChannels = buffer.numberOfChannels;
+            const sampleRate = buffer.sampleRate;
+            const format = opt.float32 ? 3 : 1;
+            const bitDepth = format === 3 ? 32 : 16;
+            let result;
+            if (numChannels === 2) {
+                result = interleave(buffer.getChannelData(0), buffer.getChannelData(1));
+            } else {
+                result = buffer.getChannelData(0);
+            }
+            return encodeWAV(result, format, sampleRate, numChannels, bitDepth);
+        }
+
+        function encodeWAV(samples, format, sampleRate, numChannels, bitDepth) {
+            const bytesPerSample = bitDepth / 8;
+            const blockAlign = numChannels * bytesPerSample;
+            const buffer = new ArrayBuffer(44 + samples.length * bytesPerSample);
+            const view = new DataView(buffer);
+            writeString(view, 0, 'RIFF');
+            view.setUint32(4, 36 + samples.length * bytesPerSample, true);
+            writeString(view, 8, 'WAVE');
+            writeString(view, 12, 'fmt ');
+            view.setUint32(16, 16, true);
+            view.setUint16(20, format, true);
+            view.setUint16(22, numChannels, true);
+            view.setUint32(24, sampleRate, true);
+            view.setUint32(28, sampleRate * blockAlign, true);
+            view.setUint16(32, blockAlign, true);
+            view.setUint16(34, bitDepth, true);
+            writeString(view, 36, 'data');
+            view.setUint32(40, samples.length * bytesPerSample, true);
+            if (format === 1) {
+                floatTo16BitPCM(view, 44, samples);
+            } else {
+                writeFloat32(view, 44, samples);
+            }
+            return view;
+        }
+
+        function interleave(inputL, inputR) {
+            const length = inputL.length + inputR.length;
+            const result = new Float32Array(length);
+            let index = 0,
+                inputIndex = 0;
+            while (index < length) {
+                result[index++] = inputL[inputIndex];
+                result[index++] = inputR[inputIndex];
+                inputIndex++;
+            }
+            return result;
+        }
+
+        function writeFloat32(output, offset, input) {
+            for (let i = 0; i < input.length; i++, offset += 4) {
+                output.setFloat32(offset, input[i], true);
+            }
+        }
+
+        function floatTo16BitPCM(output, offset, input) {
+            for (let i = 0; i < input.length; i++, offset += 2) {
+                const s = Math.max(-1, Math.min(1, input[i]));
+                output.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+            }
+        }
+
+        function writeString(view, offset, string) {
+            for (let i = 0; i < string.length; i++) {
+                view.setUint8(offset + i, string.charCodeAt(i));
+            }
+        }
+
+        async function exportAudio(e) {
+            e.stopPropagation();
+            const btn = document.getElementById('exportBtn');
+            const originalText = btn.textContent;
+            btn.textContent = '…';
+            btn.disabled = true;
+
+            const waveType = document.getElementById('waveType').value;
+            const filterType = document.getElementById('filterType').value;
+            const startFreq = parseFloat(document.getElementById('startFreqInput').value);
+            const endFreq = parseFloat(document.getElementById('endFreqInput').value);
+            const audioDuration = parseFloat(document.getElementById('audioDurationInput').value);
+            const decayTime = parseFloat(document.getElementById('decayTimeInput').value);
+            const attackTime = parseFloat(document.getElementById('attackTimeInput').value);
+            const filterFreq = parseFloat(document.getElementById('filterFreqInput').value);
+            const filterQ = parseFloat(document.getElementById('filterQInput').value);
+            
+            const totalDuration = audioDuration + 0.05;
+            const sampleRate = 44100;
+            const offlineCtx = new OfflineAudioContext(1, sampleRate * totalDuration, sampleRate);
+            
+            const now = offlineCtx.currentTime;
+
+            const osc = offlineCtx.createOscillator();
+            const filter = offlineCtx.createBiquadFilter();
+            const gain = offlineCtx.createGain();
+
+            osc.type = waveType;
+            filter.type = filterType;
+            
+            osc.connect(filter);
+            filter.connect(gain);
+            gain.connect(offlineCtx.destination);
+            
+            filter.frequency.setValueAtTime(filterFreq, now);
+            filter.Q.setValueAtTime(filterQ, now);
+
+            osc.frequency.setValueAtTime(startFreq, now);
+            osc.frequency.linearRampToValueAtTime(endFreq, now + audioDuration);
+            
+            gain.gain.setValueAtTime(0.0, now);
+            gain.gain.linearRampToValueAtTime(0.5, now + attackTime);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + audioDuration);
+            
+            osc.start(now);
+            
+            try {
+                const renderedBuffer = await offlineCtx.startRendering();
+                const wav = bufferToWav(renderedBuffer);
+                const blob = new Blob([wav], { type: 'audio/wav' });
+
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = 'synth.wav';
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+
+            } catch(err) {
+                alert('An error occurred while exporting the audio.');
+            } finally {
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }
+        }
+
         function visualize() {
             if (!analyser) return;
             if (animationFrameId) {
@@ -1220,8 +1435,15 @@ function createCustomTone(audioContext, isLooped = false) {
             btn.classList.add(outSpinClass);
 
             setTimeout(() => {
-                const isLight = document.body.classList.toggle('light-theme');
-                localStorage.setItem('synthTheme', isLight ? 'light' : 'dark');
+                currentThemeIndex = (currentThemeIndex + 1) % THEMES.length;
+                const newTheme = THEMES[currentThemeIndex];
+                
+                document.body.classList.remove(...THEMES.filter(t => t !== 'default'));
+
+                if (newTheme !== 'default') {
+                    document.body.classList.add(newTheme);
+                }
+                localStorage.setItem('synthTheme', newTheme);
                 drawBlankVisualizer(); 
                 
                 btn.classList.remove(outSpinClass);
@@ -1242,25 +1464,22 @@ function createCustomTone(audioContext, isLooped = false) {
 
             const outSpinClass = 'animate-spin-out';
             const inSpinClass = 'animate-spin-in';
-            const resetBtn = document.getElementById('resetBtn');
-            const themeBtn = document.getElementById('themeToggleBtn');
             
-            resetBtn.classList.add(outSpinClass);
-            themeBtn.classList.add(outSpinClass);
+            const buttons = container.querySelectorAll('.action-btn');
+            buttons.forEach(btn => btn.classList.add(outSpinClass));
             
             setTimeout(() => {
                 container.classList.remove('right', 'left');
                 container.classList.add(targetDirection);
                 localStorage.setItem('synthButtonSide', targetDirection);
                 
-                resetBtn.classList.remove(outSpinClass);
-                themeBtn.classList.remove(outSpinClass);
-                resetBtn.classList.add(inSpinClass);
-                themeBtn.classList.add(inSpinClass);
+                buttons.forEach(btn => {
+                    btn.classList.remove(outSpinClass);
+                    btn.classList.add(inSpinClass);
+                });
                 
                 setTimeout(() => {
-                    resetBtn.classList.remove(inSpinClass);
-                    themeBtn.classList.remove(inSpinClass);
+                    buttons.forEach(btn => btn.classList.remove(inSpinClass));
                 }, 500); 
             }, 500);
         }
@@ -1291,22 +1510,13 @@ function createCustomTone(audioContext, isLooped = false) {
                 } catch {
                     settings = DEFAULTS;
                 }
-                
-                const savedTheme = localStorage.getItem('synthTheme');
-                if (savedTheme === 'light') {
-                    document.body.classList.add('light-theme');
-                } else if (savedTheme === 'dark') {
-                    document.body.classList.remove('light-theme');
-                }
             }
 
             document.getElementById('waveType').value = settings.waveType || DEFAULTS.waveType;
             document.getElementById('filterType').value = settings.filterType || DEFAULTS.filterType;
-
             document.getElementById('startFreq').value = document.getElementById('startFreqInput').value = settings.startFreq || DEFAULTS.startFreq;
             document.getElementById('endFreq').value = document.getElementById('endFreqInput').value = settings.endFreq || DEFAULTS.endFreq;
             document.getElementById('audioDuration').value = document.getElementById('audioDurationInput').value = settings.audioDuration || DEFAULTS.audioDuration;
-
             document.getElementById('decayTime').value = document.getElementById('decayTimeInput').value = settings.decayTime || DEFAULTS.decayTime;
             document.getElementById('attackTime').value = document.getElementById('attackTimeInput').value = settings.attackTime || DEFAULTS.attackTime;
             document.getElementById('filterFreq').value = document.getElementById('filterFreqInput').value = settings.filterFreq || DEFAULTS.filterFreq;
