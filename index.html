@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>./SYNTH</title>
+    <title>Synthesizer</title>
     <style>
         :root {
             --bg-color: black;
@@ -198,7 +198,7 @@
             transition: all 0.1s;
         }
 
-        #loopBtn {
+        #loopBtn, #shuffleVisualizerBtn {
             width: 40px;
             height: 40px;
             padding: 0;
@@ -219,7 +219,7 @@
             border-color: var(--loop-color);
         }
         
-        #playBtn:active:not(:disabled), #loopBtn:active:not(.active) {
+        #playBtn:active:not(:disabled), #loopBtn:active:not(.active), #shuffleVisualizerBtn:active {
             filter: invert(100%);
         }
         #loopBtn.active:active {
@@ -453,10 +453,15 @@
             filter: none !important;
         }
         .retro-light-theme .side-buttons-container .action-btn, .retro-dark-theme .side-buttons-container .action-btn { border-radius: 0; border-style: outset; }
-        .retro-light-theme button:active:not(:disabled), .retro-dark-theme button:active:not(:disabled) { border-style: inset; }
+        .retro-light-theme button:active:not(:disabled), .retro-dark-theme button:active:not(:disabled), #shuffleVisualizerBtn:active:not(:disabled) { border-style: inset; }
+        .retro-light-theme #shuffleVisualizerBtn:active:not(:disabled) { border-style: groove; background-color: black; }
+        .retro-dark-theme #shuffleVisualizerBtn:active:not(:disabled) { border-style: groove; background-color: white; }
         .retro-light-theme #playBtn { border-radius: 0; border-style: outset; border-width: 2px; background-color: #dedede; color: black;}
 		.retro-dark-theme #playBtn { border-radius: 0; border-style: outset; border-width: 2px; background-color: #121212; color: white;}
-        .retro-light-theme #loopBtn, .retro-dark-theme #loopBtn { border-radius: 0; border-style: outset; border-width: 2px; background-color: white; color: black; border-color: var(--border-color);}
+        .retro-light-theme #loopBtn, .retro-dark-theme #loopBtn,
+        .retro-light-theme #shuffleVisualizerBtn, .retro-dark-theme #shuffleVisualizerBtn { 
+            border-radius: 0; border-style: outset; border-width: 2px; background-color: var(--op-bg-color); color: var(--op-text-color); border-color: var(--border-color);
+        }
         .retro-light-theme #loopBtn.active, .retro-dark-theme #loopBtn.active { border-style: outset; background-color: var(--loop-color); color: white; border-color: var(--border-color); }
         .retro-light-theme .controls-container { border-radius: 0; border-style: groove; border-width: 2.5px;}
 		.retro-dark-theme .controls-container { border-radius: 0; border-style: outset; border-width: 2.5px; border-color: var(--border-color);}
@@ -683,72 +688,73 @@
                     
                     <div class="control-group">
                         <label for="waveType">Wave Type</label>
-                        <select id="waveType" oninput="generateCode()"></select>
+                        <select id="waveType" oninput="saveSettings(); generateCode(); if (isLooping) playCustomSound();"></select>
                     </div>
 
                     <div class="control-group">
                         <label for="filterType">Filter Type</label>
-                        <select id="filterType" oninput="generateCode()"></select>
+                        <select id="filterType" oninput="saveSettings(); generateCode(); if (isLooping) playCustomSound();"></select>
                     </div>
 
                     <div class="control-group">
                         <label for="startFreq">Start Frequency (Hz)</label>
                         <div class="value-input-group">
-                            <input type="range" id="startFreq" min="50" max="4000" step="1" value="1000" data-link="startFreqInput" oninput="linkSlider(this); generateCode()">
-                            <input type="number" id="startFreqInput" class="value-input" min="50" max="4000" step="1" value="1000" data-link="startFreq" oninput="linkInput(this); generateCode()">
+                            <input type="range" id="startFreq" min="50" max="4000" step="1" value="1000" data-link="startFreqInput" oninput="linkSlider(this); generateCode(); if (isLooping) playCustomSound();">
+                            <input type="number" id="startFreqInput" class="value-input" min="50" max="4000" step="1" value="1000" data-link="startFreq" oninput="linkInput(this); generateCode(); if (isLooping) playCustomSound();">
                         </div>
                     </div>
 
                     <div class="control-group">
                         <label for="endFreq">End Frequency (Hz)</label>
                         <div class="value-input-group">
-                            <input type="range" id="endFreq" min="50" max="4000" step="1" value="1000" data-link="endFreqInput" oninput="linkSlider(this); generateCode()">
-                            <input type="number" id="endFreqInput" class="value-input" min="50" max="4000" step="1" value="1000" data-link="endFreq" oninput="linkInput(this); generateCode()">
+                            <input type="range" id="endFreq" min="50" max="4000" step="1" value="1000" data-link="endFreqInput" oninput="linkSlider(this); generateCode(); if (isLooping) playCustomSound();">
+                            <input type="number" id="endFreqInput" class="value-input" min="50" max="4000" step="1" value="1000" data-link="endFreq" oninput="linkInput(this); generateCode(); if (isLooping) playCustomSound();">
                         </div>
                     </div>
 
                     <div class="control-group">
                         <label for="audioDuration">Audio Duration (s)</label>
                         <div class="value-input-group">
-                            <input type="range" id="audioDuration" min="0.1" max="5.0" step="0.1" value="0.7" data-link="audioDurationInput" oninput="linkSlider(this); generateCode()">
-                            <input type="number" id="audioDurationInput" class="value-input" min="0.1" max="5.0" step="0.1" value="0.7" data-link="audioDuration" oninput="linkInput(this); generateCode()">
+                            <input type="range" id="audioDuration" min="0.1" max="5.0" step="0.1" value="0.7" data-link="audioDurationInput" oninput="linkSlider(this); generateCode(); if (isLooping) playCustomSound();">
+                            <input type="number" id="audioDurationInput" class="value-input" min="0.1" max="5.0" step="0.1" value="0.7" data-link="audioDuration" oninput="linkInput(this); generateCode(); if (isLooping) playCustomSound();">
                         </div>
                     </div>
 
                     <div class="control-group">
                         <label for="decayTime">Decay Time (s)</label>
                         <div class="value-input-group">
-                            <input type="range" id="decayTime" min="0.01" max="0.5" step="0.01" value="0.07" data-link="decayTimeInput" oninput="linkSlider(this); generateCode()">
-                            <input type="number" id="decayTimeInput" class="value-input" min="0.01" max="0.5" step="0.01" value="0.07" data-link="decayTime" oninput="linkInput(this); generateCode()">
+                            <input type="range" id="decayTime" min="0.01" max="0.5" step="0.01" value="0.07" data-link="decayTimeInput" oninput="linkSlider(this); generateCode(); if (isLooping) playCustomSound();">
+                            <input type="number" id="decayTimeInput" class="value-input" min="0.01" max="0.5" step="0.01" value="0.07" data-link="decayTime" oninput="linkInput(this); generateCode(); if (isLooping) playCustomSound();">
                         </div>
                     </div>
 
                     <div class="control-group">
                         <label for="attackTime">Attack Time (s)</label>
                         <div class="value-input-group">
-                            <input type="range" id="attackTime" min="0.001" max="0.1" step="0.001" value="0.005" data-link="attackTimeInput" oninput="linkSlider(this); generateCode()">
-                            <input type="number" id="attackTimeInput" class="value-input" min="0.001" max="0.1" step="0.001" value="0.005" data-link="attackTime" oninput="linkInput(this); generateCode()">
+                            <input type="range" id="attackTime" min="0.001" max="0.1" step="0.001" value="0.005" data-link="attackTimeInput" oninput="linkSlider(this); generateCode(); if (isLooping) playCustomSound();">
+                            <input type="number" id="attackTimeInput" class="value-input" min="0.001" max="0.1" step="0.001" value="0.005" data-link="attackTime" oninput="linkInput(this); generateCode(); if (isLooping) playCustomSound();">
                         </div>
                     </div>
 
                     <div class="control-group">
                         <label for="filterFreq">Filter Frequency (Hz)</label>
                         <div class="value-input-group">
-                            <input type="range" id="filterFreq" min="20" max="4000" step="1" value="4000" data-link="filterFreqInput" oninput="linkSlider(this); generateCode()">
-                            <input type="number" id="filterFreqInput" class="value-input" min="20" max="4000" step="1" value="4000" data-link="filterFreq" oninput="linkInput(this); generateCode()">
+                            <input type="range" id="filterFreq" min="20" max="4000" step="1" value="4000" data-link="filterFreqInput" oninput="linkSlider(this); generateCode(); if (isLooping) playCustomSound();">
+                            <input type="number" id="filterFreqInput" class="value-input" min="20" max="4000" step="1" value="4000" data-link="filterFreq" oninput="linkInput(this); generateCode(); if (isLooping) playCustomSound();">
                         </div>
                     </div>
                     
                     <div class="control-group">
                         <label for="filterQ">Filter Q (Resonance)</label>
                         <div class="value-input-group">
-                            <input type="range" id="filterQ" min="0.1" max="30" step="0.1" value="1.0" data-link="filterQInput" oninput="linkSlider(this); generateCode()">
-                            <input type="number" id="filterQInput" class="value-input" min="0.1" max="30" step="0.1" value="1.0" data-link="filterQ" oninput="linkInput(this); generateCode()">
+                            <input type="range" id="filterQ" min="0.1" max="30" step="0.1" value="1.0" data-link="filterQInput" oninput="linkSlider(this); generateCode(); if (isLooping) playCustomSound();">
+                            <input type="number" id="filterQInput" class="value-input" min="0.1" max="30" step="0.1" value="1.0" data-link="filterQ" oninput="linkInput(this); generateCode(); if (isLooping) playCustomSound();">
                         </div>
                     </div>
 
                     <div class="action-button-group">
                         <button id="loopBtn" onclick="toggleLoop()"><b>∞</b></button>
+                        <button id="shuffleVisualizerBtn" onclick="shuffleVisualizer()"><b>⌘</b></button>
                         <button id="playBtn" onclick="playCustomSound()">SOUND</button>
                     </div>
                 </div>
@@ -788,7 +794,7 @@
         let analyser;
         let animationFrameId = null;
         let isLooping = false; 
-        let currentOscillator = null; 
+        let currentSound = null;
         let originalCodeContainerParent = null;
 
         const DEFAULTS = {
@@ -806,7 +812,9 @@
         const WAVE_OPTIONS = ['sine', 'square', 'sawtooth', 'triangle'];
         const FILTER_OPTIONS = ['lowpass', 'highpass', 'bandpass', 'notch'];
         const THEMES = ['default', 'light-theme', 'retro-dark-theme', 'retro-light-theme'];
+        const VISUALIZER_TYPES = ['bars', 'line', 'circle'];
         let currentThemeIndex = 0;
+        let currentVisualizerIndex = 0;
 
         function initSelects() {
             const waveSelect = document.getElementById('waveType');
@@ -834,18 +842,19 @@
                  document.getElementById('codeOutput').style.display = 'none';
             }
 
+            const savedVisualizer = localStorage.getItem('synthVisualizerType') || 'bars';
+            currentVisualizerIndex = VISUALIZER_TYPES.indexOf(savedVisualizer);
+            if (currentVisualizerIndex === -1) currentVisualizerIndex = 0;
             drawBlankVisualizer();
 
             document.getElementById('leftCornerBtn').addEventListener('click', () => {
-                const isCurrentlyRight = sideButtons.classList.contains('right');
-                if (isCurrentlyRight) { 
+                if (sideButtons.classList.contains('right')) { 
                     toggleButtonSide('left');
                 }
             });
 
             document.getElementById('rightCornerBtn').addEventListener('click', () => {
-                const isCurrentlyLeft = sideButtons.classList.contains('left');
-                if (isCurrentlyLeft) { 
+                if (sideButtons.classList.contains('left')) { 
                     toggleButtonSide('right');
                 }
             });
@@ -864,15 +873,21 @@
             }
         });
 
+        function shuffleVisualizer() {
+            currentVisualizerIndex = (currentVisualizerIndex + 1) % VISUALIZER_TYPES.length;
+            localStorage.setItem('synthVisualizerType', VISUALIZER_TYPES[currentVisualizerIndex]);
+            if (!currentSound) {
+                drawBlankVisualizer();
+            }
+        }
+
         function drawBlankVisualizer() {
-             const canvas = document.getElementById('visualizer');
+            const canvas = document.getElementById('visualizer');
+            const canvasCtx = canvas.getContext('2d');
             canvas.width = canvas.offsetWidth;
             canvas.height = canvas.offsetHeight;
-            const canvasCtx = canvas.getContext('2d');
-            
             const style = getComputedStyle(document.body);
             const bgColor = style.getPropertyValue('--code-bg-color');
-            
             canvasCtx.fillStyle = bgColor;
             canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
         }
@@ -881,7 +896,6 @@
             if (!audioContext) {
                 audioContext = new (window.AudioContext || window.webkitAudioContext)();
                 analyser = audioContext.createAnalyser();
-                analyser.fftSize = 2048; 
             }
             if (audioContext.state === 'suspended') {
                 audioContext.resume();
@@ -920,8 +934,7 @@
         }
 
         function closeModalOutside(event) {
-            const backdrop = document.getElementById('codeModalBackdrop');
-            if (event.target === backdrop) {
+            if (event.target === document.getElementById('codeModalBackdrop')) {
                 closeCodeModal();
             }
         }
@@ -969,13 +982,12 @@
         }
 
         function stopCurrentSound() {
-             if (currentOscillator) {
+             if (currentSound && currentSound.osc) {
                 try {
-                    currentOscillator.stop();
-                } catch (e) {
-                }
-                currentOscillator.disconnect();
-                currentOscillator = null;
+                    currentSound.osc.stop();
+                } catch (e) {}
+                currentSound.osc.disconnect();
+                currentSound = null;
             }
             if (animationFrameId) {
                 cancelAnimationFrame(animationFrameId);
@@ -1001,66 +1013,65 @@
             const playBtn = document.getElementById('playBtn');
             if (!isLooping && playBtn.disabled) return;
 
-            stopCurrentSound();
+            if (isLooping && currentSound && audioContext) {
+                const fadeOutTime = 0.015;
+                const nowForFade = audioContext.currentTime;
+                currentSound.gain.gain.cancelScheduledValues(nowForFade);
+                currentSound.gain.gain.setValueAtTime(currentSound.gain.gain.value, nowForFade);
+                currentSound.gain.gain.linearRampToValueAtTime(0, nowForFade + fadeOutTime);
+                currentSound.osc.stop(nowForFade + fadeOutTime);
+            } else {
+                stopCurrentSound();
+            }
             
             if (!isLooping) {
                 playBtn.disabled = true;
             }
 
             const now = initContext();
-
-            const waveType = document.getElementById('waveType').value;
-            const filterType = document.getElementById('filterType').value;
-            const startFreq = parseFloat(document.getElementById('startFreqInput').value);
-            const endFreq = parseFloat(document.getElementById('endFreqInput').value);
-            const audioDuration = parseFloat(document.getElementById('audioDurationInput').value); 
-            const decayTime = parseFloat(document.getElementById('decayTimeInput').value);
-            const attackTime = parseFloat(document.getElementById('attackTimeInput').value);
-            const filterFreq = parseFloat(document.getElementById('filterFreqInput').value);
-            const filterQ = parseFloat(document.getElementById('filterQInput').value);
+            const settings = getSettingsFromUI();
             
             const osc = audioContext.createOscillator();
             const filter = audioContext.createBiquadFilter();
             const gain = audioContext.createGain();
 
-            osc.type = waveType;
-            filter.type = filterType;
+            osc.type = settings.waveType;
+            filter.type = settings.filterType;
             
             osc.connect(filter);
             filter.connect(gain);
             gain.connect(analyser);
             analyser.connect(audioContext.destination);
             
-            filter.frequency.setValueAtTime(filterFreq, now);
-            filter.Q.setValueAtTime(filterQ, now);
-
+            filter.frequency.setValueAtTime(settings.filterFreq, now);
+            filter.Q.setValueAtTime(settings.filterQ, now);
 
             if (isLooping) {
                 osc.loop = true; 
                 osc.loopStart = 0;
-                osc.loopEnd = audioDuration;
+                osc.loopEnd = settings.audioDuration;
 
-                osc.frequency.setValueAtTime(startFreq, now); 
-                osc.frequency.linearRampToValueAtTime(endFreq, now + audioDuration);
+                osc.frequency.setValueAtTime(settings.startFreq, now); 
+                osc.frequency.linearRampToValueAtTime(settings.endFreq, now + settings.audioDuration);
                 
                 gain.gain.setValueAtTime(0.0, now);
-                gain.gain.linearRampToValueAtTime(0.5, now + attackTime);
-                gain.gain.setTargetAtTime(0.5, now + attackTime, 0.001); 
+                gain.gain.linearRampToValueAtTime(0.5, now + 0.01);
+                gain.gain.setTargetAtTime(0.5, now + 0.01, 0.001); 
                 
                 osc.start(now);
                 
             } else {
                 osc.loop = false;
                 
-                osc.frequency.setValueAtTime(startFreq, now);
-                osc.frequency.linearRampToValueAtTime(endFreq, now + audioDuration);
+                osc.frequency.setValueAtTime(settings.startFreq, now);
+                osc.frequency.linearRampToValueAtTime(settings.endFreq, now + settings.audioDuration);
                 
                 gain.gain.setValueAtTime(0.0, now);
-                gain.gain.linearRampToValueAtTime(0.5, now + attackTime);
-                gain.gain.exponentialRampToValueAtTime(0.0001, now + audioDuration);
+                gain.gain.linearRampToValueAtTime(0.5, now + settings.attackTime);
+                gain.gain.exponentialRampToValueAtTime(0.0001, now + settings.audioDuration);
                 
                 osc.start(now);
-                osc.stop(now + audioDuration + 0.05);
+                osc.stop(now + settings.audioDuration + 0.05);
 
                 osc.onended = () => {
                     playBtn.disabled = false;
@@ -1072,12 +1083,26 @@
                     osc.disconnect();
                     filter.disconnect();
                     gain.disconnect();
-                    currentOscillator = null;
+                    currentSound = null;
                 };
             }
             
-            currentOscillator = osc; 
+            currentSound = { osc, filter, gain }; 
             visualize();
+        }
+
+        function getSettingsFromUI() {
+            return {
+                waveType: document.getElementById('waveType').value,
+                filterType: document.getElementById('filterType').value,
+                startFreq: parseFloat(document.getElementById('startFreqInput').value),
+                endFreq: parseFloat(document.getElementById('endFreqInput').value),
+                audioDuration: parseFloat(document.getElementById('audioDurationInput').value), 
+                decayTime: parseFloat(document.getElementById('decayTimeInput').value),
+                attackTime: parseFloat(document.getElementById('attackTimeInput').value),
+                filterFreq: parseFloat(document.getElementById('filterFreqInput').value),
+                filterQ: parseFloat(document.getElementById('filterQInput').value)
+            };
         }
         
         function bufferToWav(buffer, opt) {
@@ -1124,8 +1149,7 @@
         function interleave(inputL, inputR) {
             const length = inputL.length + inputR.length;
             const result = new Float32Array(length);
-            let index = 0,
-                inputIndex = 0;
+            let index = 0, inputIndex = 0;
             while (index < length) {
                 result[index++] = inputL[inputIndex];
                 result[index++] = inputR[inputIndex];
@@ -1160,17 +1184,8 @@
             btn.textContent = '…';
             btn.disabled = true;
 
-            const waveType = document.getElementById('waveType').value;
-            const filterType = document.getElementById('filterType').value;
-            const startFreq = parseFloat(document.getElementById('startFreqInput').value);
-            const endFreq = parseFloat(document.getElementById('endFreqInput').value);
-            const audioDuration = parseFloat(document.getElementById('audioDurationInput').value);
-            const decayTime = parseFloat(document.getElementById('decayTimeInput').value);
-            const attackTime = parseFloat(document.getElementById('attackTimeInput').value);
-            const filterFreq = parseFloat(document.getElementById('filterFreqInput').value);
-            const filterQ = parseFloat(document.getElementById('filterQInput').value);
-            
-            const totalDuration = audioDuration + 0.05;
+            const settings = getSettingsFromUI();
+            const totalDuration = settings.audioDuration + 0.05;
             const sampleRate = 44100;
             const offlineCtx = new OfflineAudioContext(1, sampleRate * totalDuration, sampleRate);
             
@@ -1180,22 +1195,22 @@
             const filter = offlineCtx.createBiquadFilter();
             const gain = offlineCtx.createGain();
 
-            osc.type = waveType;
-            filter.type = filterType;
+            osc.type = settings.waveType;
+            filter.type = settings.filterType;
             
             osc.connect(filter);
             filter.connect(gain);
             gain.connect(offlineCtx.destination);
             
-            filter.frequency.setValueAtTime(filterFreq, now);
-            filter.Q.setValueAtTime(filterQ, now);
+            filter.frequency.setValueAtTime(settings.filterFreq, now);
+            filter.Q.setValueAtTime(settings.filterQ, now);
 
-            osc.frequency.setValueAtTime(startFreq, now);
-            osc.frequency.linearRampToValueAtTime(endFreq, now + audioDuration);
+            osc.frequency.setValueAtTime(settings.startFreq, now);
+            osc.frequency.linearRampToValueAtTime(settings.endFreq, now + settings.audioDuration);
             
             gain.gain.setValueAtTime(0.0, now);
-            gain.gain.linearRampToValueAtTime(0.5, now + attackTime);
-            gain.gain.exponentialRampToValueAtTime(0.0001, now + audioDuration);
+            gain.gain.linearRampToValueAtTime(0.5, now + settings.attackTime);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + settings.audioDuration);
             
             osc.start(now);
             
@@ -1204,14 +1219,13 @@
                 const wav = bufferToWav(renderedBuffer);
                 const blob = new Blob([wav], { type: 'audio/wav' });
 
-                const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.style.display = 'none';
-                a.href = url;
+                a.href = URL.createObjectURL(blob);
                 a.download = 'synth.wav';
                 document.body.appendChild(a);
                 a.click();
-                window.URL.revokeObjectURL(url);
+                window.URL.revokeObjectURL(a.href);
                 document.body.removeChild(a);
 
             } catch(err) {
@@ -1221,6 +1235,65 @@
                 btn.disabled = false;
             }
         }
+
+        function drawBars(canvasCtx, dataArray, W, H, color) {
+            const bufferLength = dataArray.length;
+            const barWidth = (W / bufferLength) * 2.5;
+            let x = 0;
+            for (let i = 0; i < bufferLength; i++) {
+                const barHeight = (dataArray[i] / 255) * H;
+                canvasCtx.fillStyle = color;
+                canvasCtx.fillRect(x, H - barHeight, barWidth, barHeight);
+                x += barWidth + 1;
+            }
+        }
+
+        function drawLine(canvasCtx, dataArray, W, H, color) {
+            const bufferLength = dataArray.length;
+            canvasCtx.lineWidth = 2;
+            canvasCtx.strokeStyle = color;
+            canvasCtx.beginPath();
+            const sliceWidth = W * 1.0 / bufferLength;
+            let x = 0;
+            for (let i = 0; i < bufferLength; i++) {
+                const v = dataArray[i] / 128.0;
+                const y = v * H / 2;
+                if (i === 0) {
+                    canvasCtx.moveTo(x, y);
+                } else {
+                    canvasCtx.lineTo(x, y);
+                }
+                x += sliceWidth;
+            }
+            canvasCtx.lineTo(W, H / 2);
+            canvasCtx.stroke();
+        }
+
+        function drawCircle(canvasCtx, dataArray, W, H, color) {
+            const bufferLength = dataArray.length;
+            const centerX = W / 2;
+            const centerY = H / 2;
+            const radius = Math.min(W, H) / 3.5;
+            canvasCtx.lineWidth = 2;
+            canvasCtx.strokeStyle = color;
+            canvasCtx.beginPath();
+
+            for (let i = 0; i < bufferLength; i++) {
+                const angle = (i / bufferLength) * 2 * Math.PI;
+                const barHeight = (dataArray[i] / 255) * radius * 0.8;
+                const x = centerX + Math.cos(angle) * (radius + barHeight);
+                const y = centerY + Math.sin(angle) * (radius + barHeight);
+
+                if (i === 0) {
+                    canvasCtx.moveTo(x, y);
+                } else {
+                    canvasCtx.lineTo(x, y);
+                }
+            }
+            canvasCtx.closePath();
+            canvasCtx.stroke();
+        }
+
 
         function visualize() {
             if (!analyser) return;
@@ -1237,37 +1310,40 @@
             canvas.width = canvas.offsetWidth;
             canvas.height = canvas.offsetHeight;
             
-            const bufferLength = 512; 
+            analyser.fftSize = 2048;
+            const visualizerType = VISUALIZER_TYPES[currentVisualizerIndex];
+            const bufferLength = (visualizerType === 'bars' || visualizerType === 'circle') ? analyser.frequencyBinCount / 2 : analyser.fftSize;
             const dataArray = new Uint8Array(bufferLength);
             
             const draw = () => {
-                if (!isLooping && !currentOscillator) {
-                     if (animationFrameId) {
-                        cancelAnimationFrame(animationFrameId);
-                        animationFrameId = null;
-                     }
+                if (!currentSound) {
+                     if (animationFrameId) cancelAnimationFrame(animationFrameId);
+                     animationFrameId = null;
                      drawBlankVisualizer();
                      return;
                 }
 
                 animationFrameId = requestAnimationFrame(draw);
                 
-                analyser.getByteFrequencyData(dataArray);
-
+                if (visualizerType === 'line') {
+                    analyser.getByteTimeDomainData(dataArray);
+                } else {
+                    analyser.getByteFrequencyData(dataArray);
+                }
+                
                 canvasCtx.fillStyle = bgColor;
                 canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
 
-                const barWidth = (canvas.width / bufferLength) * 2; 
-                let x = 0;
-
-                for(let i = 0; i < bufferLength; i++) {
-                    const normalizedValue = dataArray[i];
-                    const barHeight = (normalizedValue / 255) * canvas.height;
-                    
-                    canvasCtx.fillStyle = textColor;
-                    canvasCtx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
-
-                    x += barWidth + 1;
+                switch (visualizerType) {
+                    case 'line':
+                        drawLine(canvasCtx, dataArray, canvas.width, canvas.height, textColor);
+                        break;
+                    case 'circle':
+                        drawCircle(canvasCtx, dataArray, canvas.width, canvas.height, textColor);
+                        break;
+                    default:
+                        drawBars(canvasCtx, dataArray, canvas.width, canvas.height, textColor);
+                        break;
                 }
             };
             
@@ -1275,16 +1351,7 @@
         }
 
         function generateCode() {
-            const waveType = document.getElementById('waveType').value;
-            const filterType = document.getElementById('filterType').value;
-            const startFreq = parseFloat(document.getElementById('startFreqInput').value);
-            const endFreq = parseFloat(document.getElementById('endFreqInput').value);
-            const audioDuration = parseFloat(document.getElementById('audioDurationInput').value); 
-            const decayTime = parseFloat(document.getElementById('decayTimeInput').value);
-            const attackTime = parseFloat(document.getElementById('attackTimeInput').value);
-            const filterFreq = parseFloat(document.getElementById('filterFreqInput').value);
-            const filterQ = parseFloat(document.getElementById('filterQInput').value);
-
+            const s = getSettingsFromUI();
             const code = `
 function createCustomTone(audioContext, isLooped = false) {
     const now = audioContext.currentTime;
@@ -1292,15 +1359,14 @@ function createCustomTone(audioContext, isLooped = false) {
     const filter = audioContext.createBiquadFilter();
     const gain = audioContext.createGain();
 
-    const WAVE_TYPE = '${waveType}';
-    const FILTER_TYPE = '${filterType}';
-    const START_FREQ = ${startFreq.toFixed(3)};
-    const END_FREQ = ${endFreq.toFixed(3)};
-    const DURATION = ${audioDuration.toFixed(3)};
-    const DECAY_TIME = ${decayTime.toFixed(3)};
-    const ATTACK_TIME = ${attackTime.toFixed(3)};
-    const FILTER_FREQ = ${filterFreq.toFixed(3)};
-    const FILTER_Q = ${filterQ.toFixed(3)};
+    const WAVE_TYPE = '${s.waveType}';
+    const FILTER_TYPE = '${s.filterType}';
+    const START_FREQ = ${s.startFreq.toFixed(3)};
+    const END_FREQ = ${s.endFreq.toFixed(3)};
+    const DURATION = ${s.audioDuration.toFixed(3)};
+    const ATTACK_TIME = ${s.attackTime.toFixed(3)};
+    const FILTER_FREQ = ${s.filterFreq.toFixed(3)};
+    const FILTER_Q = ${s.filterQ.toFixed(3)};
     
     osc.type = WAVE_TYPE;
     filter.type = FILTER_TYPE;
@@ -1316,31 +1382,24 @@ function createCustomTone(audioContext, isLooped = false) {
         osc.loop = true;
         osc.loopStart = 0;
         osc.loopEnd = DURATION;
-        
         osc.frequency.setValueAtTime(START_FREQ, now); 
         osc.frequency.linearRampToValueAtTime(END_FREQ, now + DURATION);
-
         gain.gain.setValueAtTime(0.0, now);
         gain.gain.linearRampToValueAtTime(0.5, now + ATTACK_TIME);
         gain.gain.setTargetAtTime(0.5, now + ATTACK_TIME, 0.001); 
-
     } else {
         osc.loop = false;
-        
         osc.frequency.setValueAtTime(START_FREQ, now);
         osc.frequency.linearRampToValueAtTime(END_FREQ, now + DURATION);
-        
         gain.gain.setValueAtTime(0.0, now);
         gain.gain.linearRampToValueAtTime(0.5, now + ATTACK_TIME);
         gain.gain.exponentialRampToValueAtTime(0.0001, now + DURATION);
     }
-    
 
     osc.start(now);
     if (!isLooped) {
         osc.stop(now + DURATION + 0.05);
     }
-
     osc.onended = () => {
         osc.disconnect();
         filter.disconnect();
@@ -1356,26 +1415,14 @@ function createCustomTone(audioContext, isLooped = false) {
             e.stopPropagation();
             const codeOutput = document.getElementById('codeOutput');
             const isHidden = codeOutput.style.display === 'none';
-
-            if (isHidden) {
-                document.getElementById('codeOutputContainer').classList.remove('minimized');
-                codeOutput.style.display = 'block';
-            }
-
+            if (isHidden) codeOutput.style.display = 'block';
             codeOutput.select();
             document.execCommand('copy');
-            
-            if (isHidden) {
-                document.getElementById('codeOutputContainer').classList.add('minimized');
-                codeOutput.style.display = 'none';
-            }
-            
+            if (isHidden) codeOutput.style.display = 'none';
             const btn = e.target;
             const originalText = btn.textContent;
             btn.textContent = '☻';
-            setTimeout(() => {
-                btn.textContent = originalText;
-            }, 1000);
+            setTimeout(() => { btn.textContent = originalText; }, 1000);
         }
         
         function editCode(e) {
@@ -1386,14 +1433,11 @@ function createCustomTone(audioContext, isLooped = false) {
             if (codeOutput.readOnly) {
                 codeOutput.readOnly = false;
                 editBtn.textContent = '⎗'; 
-                
                 if (document.getElementById('codeOutputContainer').classList.contains('minimized')) {
                     toggleCodeView();
                 }
             } else {
-                const pastedCode = codeOutput.value;
-                const settings = parseCode(pastedCode);
-                
+                const settings = parseCode(codeOutput.value);
                 if (settings) {
                     loadSettings(settings); 
                     generateCode(); 
@@ -1401,7 +1445,7 @@ function createCustomTone(audioContext, isLooped = false) {
                     codeOutput.readOnly = true;
                     alert('Settings loaded from script!');
                 } else {
-                    alert('Could not parse settings. Please ensure the constants are correctly named (WAVE_TYPE, START_FREQ, DURATION, etc.) and try again.');
+                    alert('Could not parse settings from script.');
                 }
             }
         }
@@ -1410,77 +1454,52 @@ function createCustomTone(audioContext, isLooped = false) {
             const settings = {};
             const regex = /const ([A-Z_]+) = (.+);/g;
             let match;
-            
             while ((match = regex.exec(code)) !== null) {
                 const name = match[1].toLowerCase().replace(/_(\w)/g, (m, c) => c.toUpperCase());
                 let value = match[2].trim().replace(/[';]/g, '');
-
-                if (name.includes('freq') || name.includes('time') || name.includes('q') || name === 'duration') {
+                if (!isNaN(parseFloat(value))) {
                     value = parseFloat(value);
                 }
                 settings[name] = value;
             }
-
-            if (Object.keys(settings).length >= 9) {
-                return settings;
-            }
-            return null;
+            return (Object.keys(settings).length >= 8) ? settings : null;
         }
 
         function toggleTheme() {
             const btn = document.getElementById('themeToggleBtn');
-            const outSpinClass = 'animate-spin-out';
-            const inSpinClass = 'animate-spin-in';
-            
-            btn.classList.add(outSpinClass);
-
+            btn.classList.add('animate-spin-out');
             setTimeout(() => {
                 currentThemeIndex = (currentThemeIndex + 1) % THEMES.length;
                 const newTheme = THEMES[currentThemeIndex];
-                
                 document.body.classList.remove(...THEMES.filter(t => t !== 'default'));
-
                 if (newTheme !== 'default') {
                     document.body.classList.add(newTheme);
                 }
                 localStorage.setItem('synthTheme', newTheme);
                 drawBlankVisualizer(); 
-                
-                btn.classList.remove(outSpinClass);
-                btn.classList.add(inSpinClass);
-                
-                setTimeout(() => {
-                    btn.classList.remove(inSpinClass);
-                }, 500); 
-                
+                btn.classList.remove('animate-spin-out');
+                btn.classList.add('animate-spin-in');
+                setTimeout(() => btn.classList.remove('animate-spin-in'), 500);
             }, 500); 
         }
 
         function toggleButtonSide(targetDirection) {
             const container = document.getElementById('sideButtons');
             const currentSide = container.classList.contains('right') ? 'right' : 'left';
-            
             if (targetDirection === currentSide) return;
 
-            const outSpinClass = 'animate-spin-out';
-            const inSpinClass = 'animate-spin-in';
-            
             const buttons = container.querySelectorAll('.action-btn');
-            buttons.forEach(btn => btn.classList.add(outSpinClass));
+            buttons.forEach(btn => btn.classList.add('animate-spin-out'));
             
             setTimeout(() => {
                 container.classList.remove('right', 'left');
                 container.classList.add(targetDirection);
                 localStorage.setItem('synthButtonSide', targetDirection);
-                
                 buttons.forEach(btn => {
-                    btn.classList.remove(outSpinClass);
-                    btn.classList.add(inSpinClass);
+                    btn.classList.remove('animate-spin-out');
+                    btn.classList.add('animate-spin-in');
                 });
-                
-                setTimeout(() => {
-                    buttons.forEach(btn => btn.classList.remove(inSpinClass));
-                }, 500); 
+                setTimeout(() => buttons.forEach(btn => btn.classList.remove('animate-spin-in')), 500); 
             }, 500);
         }
         
@@ -1490,7 +1509,6 @@ function createCustomTone(audioContext, isLooped = false) {
                 localStorage.removeItem('synthSettings');
                 loadSettings(DEFAULTS);
                 generateCode();
-                
                 stopCurrentSound();
                 document.getElementById('playBtn').disabled = false;
                 isLooping = false;
@@ -1500,7 +1518,6 @@ function createCustomTone(audioContext, isLooped = false) {
 
         function loadSettings(customSettings) {
             let settings;
-
             if (customSettings) {
                 settings = customSettings;
             } else {
@@ -1524,18 +1541,7 @@ function createCustomTone(audioContext, isLooped = false) {
         }
 
         function saveSettings() {
-            const settings = {
-                waveType: document.getElementById('waveType').value,
-                filterType: document.getElementById('filterType').value,
-                startFreq: parseFloat(document.getElementById('startFreqInput').value),
-                endFreq: parseFloat(document.getElementById('endFreqInput').value),
-                audioDuration: parseFloat(document.getElementById('audioDurationInput').value), 
-                decayTime: parseFloat(document.getElementById('decayTimeInput').value),
-                attackTime: parseFloat(document.getElementById('attackTimeInput').value),
-                filterFreq: parseFloat(document.getElementById('filterFreqInput').value),
-                filterQ: parseFloat(document.getElementById('filterQInput').value)
-            };
-            localStorage.setItem('synthSettings', JSON.stringify(settings));
+            localStorage.setItem('synthSettings', JSON.stringify(getSettingsFromUI()));
         }
         
     </script>
