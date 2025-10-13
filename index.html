@@ -1,0 +1,1549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Synthesizer</title>
+    <style>
+        :root {
+            --bg-color: black;
+            --code-bg-color: #1a1a1a;
+            --text-color: white;
+            --border-color: white;
+            --op-bg-color: white;
+            --op-text-color: black;
+            --loop-color: #4CAF50;
+            --loop-alt-color: #FF9800;
+        }
+
+        body.light-theme {
+            --bg-color: white;
+            --code-bg-color: #f0f0f0;
+            --text-color: black;
+            --border-color: black;
+            --op-bg-color: black;
+            --op-text-color: white;
+            --loop-color: #2E7D32;
+            --loop-alt-color: #E65100;
+            -webkit-tap-highlight-color: rgba(0,0,0,0.1);
+        }
+
+        body.retro-light-theme {
+            --bg-color: white;
+            --code-bg-color: #e0e0e0;
+            --text-color: #000000;
+            --border-color: #000000;
+            --op-bg-color: #e6e6e6;
+            --op-text-color: #000000;
+            --loop-color: #2da195;
+            --loop-alt-color: #b35900;
+            font-family: 'MS Sans Serif', 'Arial', 'Monospace', sans-serif !important;
+        }
+
+        body.retro-dark-theme {
+            --bg-color: #333333;
+            --code-bg-color: #222222;
+            --text-color: #f0f0f0;
+            --border-color: #f0f0f0;
+            --op-bg-color: #333333;
+            --op-text-color: #f0f0f0;
+            --loop-color: #800000;
+            --loop-alt-color: #D2691E;
+            font-family: 'MS Sans Serif', 'Arial', 'Monospace', sans-serif !important;
+        }
+
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Monospace', monospace;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            -webkit-tap-highlight-color: transparent;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        #globalTitle {
+            font-size: 1.5em;
+            margin: 0 0 20px 0;
+            font-weight: bold;
+            color: var(--text-color);
+            align-self: flex-start;
+            width: 100%;
+            text-align: center;
+            margin-left: 10px;
+        }
+
+        .main-layout {
+            width: 100%;
+            max-width: 1400px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+            padding-top: 0;
+        }
+
+        .controls-code-column {
+            width: 100%;
+            max-width: 700px;
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+        
+        #visualizer-container {
+            width: 100%;
+            margin-bottom: 30px;
+            box-sizing: border-box;
+            position: relative;
+        }
+        
+        #visualizer-indicator {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            z-index: 5;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        body.light-theme #visualizer-indicator {
+            background-color: rgba(255, 255, 255, 0.7);
+            color: black;
+            border: 1px solid rgba(0,0,0,0.2);
+        }
+
+        #visualizer {
+            background-color: var(--code-bg-color);
+            border: 1.7px solid var(--border-color);
+            width: 100%;
+            height: 100px;
+            box-sizing: border-box;
+        }
+
+        .controls-container {
+            background-color: var(--bg-color);
+            border: 1.7px solid var(--border-color);
+            padding: 20px;
+            border-radius: 0;
+            width: 100%;
+            box-sizing: border-box;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px 30px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9em;
+        }
+
+        .value-input-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            width: 100%;
+        }
+
+        input[type="range"] {
+            flex-grow: 1;
+            margin: 0;
+            -webkit-appearance: none;
+            background: var(--border-color);
+            height: 2px;
+            cursor: pointer;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 10px;
+            height: 10px;
+            border-radius: 0;
+            background: var(--text-color);
+            border: 1px solid var(--border-color);
+        }
+
+        .value-input, select {
+            width: 70px;
+            padding: 5px;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            font-family: inherit;
+            font-size: 0.9em;
+            text-align: right;
+            border-radius: 4px;
+        }
+
+        select {
+            width: 100%;
+            box-sizing: border-box;
+            border-radius: 4px;
+            text-align: left;
+            text-align-last: left;
+            min-width: 120px;
+        }
+
+        .action-button-group {
+            grid-column: 1 / -1;
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        #advancedToggle {
+            cursor: pointer;
+            font-weight: bold;
+            user-select: none;
+            padding: 10px 20px;
+            border: 1.7px solid var(--border-color);
+            margin-top: 20px;
+            text-align: center;
+            width: 100%;
+            background-color: transparent;
+            color: var(--text-color);
+            font-family: inherit;
+            font-size: 1em;
+            border-radius: 4px;
+            display: flex;
+            justify-content: left;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.1s;
+        }
+
+        #advancedToggle:active {
+            filter: invert(100%);
+        }
+        
+        #advancedToggle .arrow {
+            display: inline-block;
+            transition: transform 0.2s;
+        }
+
+        #advancedControlsContainer {
+            display: none;
+            grid-template-columns: 1fr;
+            gap: 20px;
+            padding-top: 20px;
+        }
+
+
+        #playBtn {
+            flex-grow: 1;
+            padding: 10px 20px;
+            font-size: 1.1em;
+            background-color: var(--op-bg-color);
+            color: var(--op-text-color);
+            border: 2px solid var(--border-color);
+            cursor: pointer;
+            font-family: inherit;
+            border-radius: 8px;
+            transition: all 0.1s;
+        }
+
+        #loopBtn, #shuffleVisualizerBtn {
+            width: 40px;
+            height: 40px;
+            padding: 0;
+            font-size: 1.1em;
+            background-color: var(--op-bg-color);
+            color: var(--op-text-color);
+            border: 2px solid var(--border-color);
+            cursor: pointer;
+            font-family: inherit;
+            border-radius: 50%;
+            flex-shrink: 0;
+            transition: all 0.1s;
+        }
+
+        #loopBtn.active {
+            background-color: var(--loop-color);
+            color: var(--op-bg-color);
+            border-color: var(--loop-color);
+        }
+
+        #loopBtn.active.alt {
+            background-color: var(--loop-alt-color);
+            border-color: var(--loop-alt-color);
+        }
+
+        #playBtn:active:not(:disabled), #loopBtn:active:not(.active), #shuffleVisualizerBtn:active {
+            filter: invert(100%);
+        }
+        #loopBtn.active:active {
+            filter: brightness(80%);
+        }
+        #playBtn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        #codeOutputContainer {
+            background-color: var(--code-bg-color);
+            border: 2px solid var(--border-color);
+            padding: 15px;
+            border-radius: 0;
+            width: 100%;
+            margin-top: 30px;
+            margin-bottom: 0;
+            box-sizing: border-box;
+            transition: all 0.3s ease-in-out;
+        }
+
+        #codeHeader {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+            height: 100%;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        #codeHeader div {
+            display: flex;
+            gap: 10px;
+            height: 100%;
+            align-items: center;
+        }
+
+        #codeOutput {
+            width: 100%;
+            height: 250px;
+            border: none;
+            background: none;
+            color: var(--text-color);
+            font-family: 'Monospace', monospace;
+            font-size: 12px;
+            resize: vertical;
+            padding: 10px 0 0 0;
+            box-sizing: border-box;
+            line-height: 1.4;
+            display: block;
+            border-radius: 0;
+            transition: all 0.2s;
+        }
+
+        .code-action-btn {
+            width: 30px;
+            height: 30px;
+            border-radius: 4px;
+            background-color: transparent;
+            border: 1.5px solid var(--border-color);
+            color: var(--text-color);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            font-family: 'Monospace', monospace;
+            box-sizing: border-box;
+            font-size: 14px;
+            line-height: 1;
+            transition: all 0.3s;
+        }
+
+        .code-action-btn:active {
+            filter: invert(100%);
+        }
+
+        .side-buttons-container {
+            position: fixed;
+            top: 20px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: row;
+            gap: 10px;
+            transition: left 0.5s, right 0.5s;
+        }
+
+        .side-buttons-container.right {
+            right: 20px;
+            left: unset;
+        }
+
+        .side-buttons-container.left {
+            left: 20px;
+            right: unset;
+        }
+
+        .side-buttons-container .action-btn {
+            width: 40px;
+            height: 40px;
+            font-size: 18px;
+            border-radius: 50%;
+            background-color: var(--op-bg-color);
+            border: 1.7px solid var(--op-bg-color);
+            color: var(--op-text-color);
+            transform-origin: center center;
+            transition: all 0.1s;
+        }
+
+        .corner-button {
+            position: fixed;
+            top: 0;
+            width: 25vw;
+            height: 5vh;
+            z-index: 999;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        #leftCornerBtn { left: 0; }
+        #rightCornerBtn { right: 0; }
+        .animate-spin-out { animation: spinShrinkDisappear 0.5s forwards; }
+        .animate-spin-in { animation: spinGrowAppear 0.5s forwards; }
+
+        @keyframes spinShrinkDisappear {
+            0% { transform: rotate(0deg) scale(1); opacity: 1; }
+            100% { transform: rotate(-720deg) scale(0); opacity: 0; }
+        }
+        @keyframes spinGrowAppear {
+            0% { transform: rotate(0deg) scale(0); opacity: 0; }
+            14% { transform: rotate(0deg) scale(0.1); opacity: 0; }
+            100% { transform: rotate(720deg) scale(1); opacity: 1; }
+        }
+
+        #codeModalBackdrop {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        #codeModalBackdrop.visible {
+            display: flex;
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        #codeModalPanel {
+            position: relative;
+            width: 90%;
+            max-width: 650px;
+            max-height: 80vh;
+            overflow: hidden;
+            border-radius: 8px;
+            padding: 15px;
+            box-sizing: border-box;
+            background-color: rgba(255, 255, 255, 0.15);
+            border: 1.5px solid rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+            color: var(--text-color);
+            transition: all 0.3s ease-in-out;
+            transform: scale(0.95);
+            display: flex;
+            flex-direction: column;
+        }
+
+        body.light-theme #codeModalPanel {
+            background-color: rgba(255, 255, 255, 0.6);
+            border: 1.5px solid rgba(0, 0, 0, 0.3);
+        }
+
+        #codeModalBackdrop.visible #codeModalPanel { transform: scale(1); }
+        #codeModalPanel #codeOutputContainer { margin-top: 0 !important; padding: 0 !important; border: none !important; background-color: transparent !important; max-height: 100%; }
+        #codeModalPanel #codeOutput { height: calc(80vh - 100px); resize: none !important; overflow: auto; }
+        .retro-light-theme *, .retro-dark-theme * { transition: none !important; }
+        .retro-light-theme button, .retro-dark-theme button, .retro-light-theme .code-action-btn, .retro-dark-theme .code-action-btn { border-radius: 0; border-style: outset; border-width: 2px; filter: none !important; }
+        .retro-light-theme .side-buttons-container .action-btn, .retro-dark-theme .side-buttons-container .action-btn { border-radius: 0; border-style: outset; }
+        .retro-light-theme button:active:not(:disabled), .retro-dark-theme button:active:not(:disabled), #shuffleVisualizerBtn:active:not(:disabled) { border-style: inset; }
+        .retro-light-theme #shuffleVisualizerBtn:active:not(:disabled) { border-style: groove; background-color: black; }
+        .retro-dark-theme #shuffleVisualizerBtn:active:not(:disabled) { border-style: groove; background-color: white; }
+        .retro-light-theme #playBtn { border-radius: 0; border-style: outset; border-width: 2px; background-color: #dedede; color: black;}
+		.retro-dark-theme #playBtn { border-radius: 0; border-style: outset; border-width: 2px; background-color: #121212; color: white;}
+        .retro-light-theme #loopBtn, .retro-dark-theme #loopBtn, .retro-light-theme #shuffleVisualizerBtn, .retro-dark-theme #shuffleVisualizerBtn { border-radius: 0; border-style: outset; border-width: 2px; background-color: var(--op-bg-color); color: var(--op-text-color); border-color: var(--border-color); }
+        .retro-light-theme #loopBtn.active, .retro-dark-theme #loopBtn.active { border-style: outset; background-color: var(--loop-color); color: white; border-color: var(--border-color); }
+        .retro-light-theme .controls-container { border-radius: 0; border-style: groove; border-width: 2.5px;}
+		.retro-dark-theme .controls-container { border-radius: 0; border-style: outset; border-width: 2.5px; border-color: var(--border-color);}
+        .retro-light-theme #visualizer, .retro-dark-theme #visualizer { border: 1px solid var(--border-color); }
+        .retro-light-theme input[type="text"], .retro-dark-theme input[type="text"], .retro-light-theme input[type="number"], .retro-dark-theme input[type="number"], .retro-light-theme select, .retro-dark-theme select { border-radius: 0; border-style: inset; border-width: 2px; background-color: var(--code-bg-color); }
+        .retro-light-theme #codeModalPanel, .retro-dark-theme #codeModalPanel { border-radius: 0; backdrop-filter: none; -webkit-backdrop-filter: none; background-color: var(--bg-color); border: 2px outset var(--border-color); box-shadow: none; }
+        .retro-light-theme { --border-3d-light: #ffffff; --border-3d-dark: #808080; }
+        .retro-dark-theme { --border-3d-light: #555555; --border-3d-dark: #111111; }
+        .retro-light-theme .controls-container, .retro-dark-theme .controls-container, .retro-light-theme select, .retro-dark-theme select, .retro-light-theme .value-input, .retro-dark-theme .value-input { border-color: var(--border-3d-dark) var(--border-3d-light) var(--border-3d-light) var(--border-3d-dark); }
+        .retro-light-theme button, .retro-dark-theme button, .retro-light-theme .code-action-btn, .retro-dark-theme .code-action-btn { border-color: var(--border-3d-light) var(--border-3d-dark) var(--border-3d-dark) var(--border-3d-light); }
+        .retro-light-theme button:active, .retro-dark-theme button:active, .retro-light-theme #loopBtn.active, .retro-dark-theme #loopBtn.active { border-color: var(--border-3d-dark) var(--border-3d-light) var(--border-3d-light) var(--border-3d-dark); }
+        #mobile-fixed-buttons { display: none; }
+
+        @media (min-width: 769px) {
+            body { 
+                padding: 20px; 
+            }
+            #globalTitle { 
+                margin: 0 0 20px 0; 
+                align-self: center; 
+                text-align: center; 
+            }
+            .main-layout {
+                flex-direction: row;
+                justify-content: center;
+                align-items: center;
+                gap: 50px;
+                height: calc(100vh - 40px);
+                max-height: 800px;
+            }
+            .controls-code-column {
+                display: flex;
+                flex-direction: row;
+                gap: 50px;
+                max-width: none;
+                width: 100%;
+                height: 100%;
+                justify-content: center;
+            }
+            #visualizer-container {
+                order: 1;
+                height: 100%;
+                aspect-ratio: 1 / 1;
+                margin: 0;
+                padding: 0;
+                align-self: center;
+                border: 2px solid var(--border-color);
+                max-width: calc(50% - 25px);
+            }
+            #visualizer { 
+                height: 100%; 
+                border: none; 
+            }
+            .controls-group-right {
+                order: 2;
+                display: flex;
+                flex-direction: column;
+                height: 100%;
+                aspect-ratio: 1 / 1;
+                padding-top: 0;
+                border: 2px solid var(--border-color);
+                background-color: var(--bg-color);
+                max-width: calc(50% - 25px);
+            }
+            #scrollableControls {
+                overflow-y: auto;
+                flex-grow: 1;
+                padding: 20px;
+            }
+            .controls-container {
+                grid-template-columns: 1fr 1fr;
+                gap: 15px 20px;
+                border: none;
+                padding: 0;
+            }
+            #advancedControlsContainer {
+                grid-template-columns: 1fr 1fr;
+                gap: 15px 20px;
+            }
+            #codeOutputContainer {
+                margin-top: 30px;
+                height: auto;
+                border-top: 2px solid var(--border-color);
+                border-left: none; border-right: none; border-bottom: none;
+            }
+            #scrollableControls #codeOutput {
+                display: block;
+            }
+            #codeHeader { 
+                padding-bottom: 10px; 
+            }
+            #stickyActions {
+                flex-shrink: 0;
+                padding: 20px;
+                border-top: 2px solid var(--border-color);
+            }
+            .value-input, select { 
+                width: 50px; 
+            }
+            .value-input-group { 
+                gap: 5px; 
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 60px 10px 100px 10px;
+            }
+            .header-fixed {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                z-index: 20;
+                background-color: var(--bg-color);
+                border-bottom: 1.7px solid var(--border-color);
+            }
+            #globalTitle {
+                padding: 10px 10px 0 10px;
+                margin: 0;
+                height: 50px;
+                box-sizing: border-box;
+            }
+            .side-buttons-container { top: 5px; left: 10px; right: unset; bottom: unset; }
+            .side-buttons-container.right { right: 10px; left: unset; }
+            .side-buttons-container .action-btn { width: 35px; height: 35px; }
+            .controls-code-column {
+                flex-direction: column;
+                gap: 0;
+                max-width: 100%;
+                width: 100%;
+                margin-top: 150px;
+            }
+            #visualizer-container {
+                position: fixed;
+                top: 50px;
+                left:0; right: 0;
+                z-index: 10;
+                margin-bottom: 0;
+                padding: 10px;
+                border: none;
+                border-bottom: 1.7px solid var(--border-color);
+                height: 150px;
+                max-width: 100%;
+                background-color: var(--bg-color);
+            }
+            #visualizer { height: 100%; border: none; }
+            .controls-group-right { width: 100%; }
+            .controls-container {
+                grid-template-columns: 1fr;
+                padding: 20px 10px;
+                gap: 12px 10px;
+                border-top: none;
+            }
+            #advancedControlsContainer { grid-template-columns: 1fr; }
+            .action-button-group { display: none; }
+            #mobile-fixed-buttons {
+                display: flex;
+                position: fixed;
+                bottom: 0; left: 0; right: 0;
+                z-index: 10;
+                padding: 15px 10px;
+                background-color: var(--bg-color);
+                border-top: 1.7px solid var(--border-color);
+                gap: 10px;
+            }
+            #mobile-fixed-buttons #loopBtn, #mobile-fixed-buttons #shuffleVisualizerBtn {
+                width: 45px; height: 45px; border-radius: 50%;
+            }
+            #mobile-fixed-buttons #playBtn { border-radius: 8px; }
+            #codeOutputContainer { margin-top: 30px; }
+            .value-input, select { width: 70px; }
+        }
+    </style>
+</head>
+<body id="body">
+
+    <div class="header-fixed">
+        <h1 id="globalTitle">./SYNTH.</h1>
+    </div>
+    
+    <div class="main-layout">
+        <div class="controls-code-column">
+
+            <div id="visualizer-container">
+                <canvas id="visualizer"></canvas>
+                <div id="visualizer-indicator"></div>
+            </div>
+            
+            <div class="controls-group-right"> 
+                <div id="scrollableControls">
+                    <div class="controls-container">
+                        <div class="control-group">
+                            <label for="waveType">Wave Type</label>
+                            <select id="waveType" oninput="saveSettings(); generateCode(); if (loopMode > 0) playCustomSound();"></select>
+                        </div>
+
+                        <div class="control-group">
+                            <label for="filterType">Filter Type</label>
+                            <select id="filterType" oninput="saveSettings(); generateCode(); if (loopMode > 0) playCustomSound();"></select>
+                        </div>
+
+                        <div class="control-group">
+                            <label for="startFreq">Start Frequency (Hz)</label>
+                            <div class="value-input-group">
+                                <input type="range" id="startFreq" min="50" max="4000" step="1" value="1000" data-link="startFreqInput" oninput="linkSlider(this); generateCode(); if (loopMode > 0) playCustomSound();">
+                                <input type="number" id="startFreqInput" class="value-input" min="50" max="4000" step="1" value="1000" data-link="startFreq" oninput="linkInput(this); generateCode(); if (loopMode > 0) playCustomSound();">
+                            </div>
+                        </div>
+
+                        <div class="control-group">
+                            <label for="endFreq">End Frequency (Hz)</label>
+                            <div class="value-input-group">
+                                <input type="range" id="endFreq" min="50" max="4000" step="1" value="1000" data-link="endFreqInput" oninput="linkSlider(this); generateCode(); if (loopMode > 0) playCustomSound();">
+                                <input type="number" id="endFreqInput" class="value-input" min="50" max="4000" step="1" value="1000" data-link="endFreq" oninput="linkInput(this); generateCode(); if (loopMode > 0) playCustomSound();">
+                            </div>
+                        </div>
+
+                        <div class="control-group">
+                            <label for="audioDuration">Note Duration (s)</label>
+                            <div class="value-input-group">
+                                <input type="range" id="audioDuration" min="0.1" max="5.0" step="0.1" value="0.7" data-link="audioDurationInput" oninput="linkSlider(this); generateCode(); if (loopMode > 0) playCustomSound();">
+                                <input type="number" id="audioDurationInput" class="value-input" min="0.1" max="5.0" step="0.1" value="0.7" data-link="audioDuration" oninput="linkInput(this); generateCode(); if (loopMode > 0) playCustomSound();">
+                            </div>
+                        </div>
+
+                        <div class="control-group">
+                            <label for="decayTime">Decay Time (s)</label>
+                            <div class="value-input-group">
+                                <input type="range" id="decayTime" min="0.01" max="0.5" step="0.01" value="0.07" data-link="decayTimeInput" oninput="linkSlider(this); generateCode(); if (loopMode > 0) playCustomSound();">
+                                <input type="number" id="decayTimeInput" class="value-input" min="0.01" max="0.5" step="0.01" value="0.07" data-link="decayTime" oninput="linkInput(this); generateCode(); if (loopMode > 0) playCustomSound();">
+                            </div>
+                        </div>
+
+                        <div class="control-group">
+                            <label for="attackTime">Attack Time (s)</label>
+                            <div class="value-input-group">
+                                <input type="range" id="attackTime" min="0.001" max="0.1" step="0.001" value="0.005" data-link="attackTimeInput" oninput="linkSlider(this); generateCode(); if (loopMode > 0) playCustomSound();">
+                                <input type="number" id="attackTimeInput" class="value-input" min="0.001" max="0.1" step="0.001" value="0.005" data-link="attackTime" oninput="linkInput(this); generateCode(); if (loopMode > 0) playCustomSound();">
+                            </div>
+                        </div>
+
+                        <div class="control-group">
+                            <label for="filterFreq">Filter Frequency (Hz)</label>
+                            <div class="value-input-group">
+                                <input type="range" id="filterFreq" min="20" max="4000" step="1" value="4000" data-link="filterFreqInput" oninput="linkSlider(this); generateCode(); if (loopMode > 0) playCustomSound();">
+                                <input type="number" id="filterFreqInput" class="value-input" min="20" max="4000" step="1" value="4000" data-link="filterFreq" oninput="linkInput(this); generateCode(); if (loopMode > 0) playCustomSound();">
+                            </div>
+                        </div>
+                        
+                        <div class="control-group">
+                            <label for="filterQ">Filter Q (Resonance)</label>
+                            <div class="value-input-group">
+                                <input type="range" id="filterQ" min="0.1" max="30" step="0.1" value="1.0" data-link="filterQInput" oninput="linkSlider(this); generateCode(); if (loopMode > 0) playCustomSound();">
+                                <input type="number" id="filterQInput" class="value-input" min="0.1" max="30" step="0.1" value="1.0" data-link="filterQ" oninput="linkInput(this); generateCode(); if (loopMode > 0) playCustomSound();">
+                            </div>
+                        </div>
+                        
+                        <div class="control-group">
+                            <label for="sustainLevel">Sustain Level (0.0-1.0)</label>
+                            <div class="value-input-group">
+                                <input type="range" id="sustainLevel" min="0.0001" max="1.0" step="0.0001" value="0.5" data-link="sustainLevelInput" oninput="linkSlider(this); generateCode(); if (loopMode > 0) playCustomSound();">
+                                <input type="number" id="sustainLevelInput" class="value-input" min="0.0001" max="1.0" step="0.0001" value="0.5" data-link="sustainLevel" oninput="linkInput(this); generateCode(); if (loopMode > 0) playCustomSound();">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button id="advancedToggle">•••<span class="arrow"></span><span id="msg1" style="opacity: 1; transition: opacity 0.5s ease-in-out; font-size: small; color: #888;">(Tap For ADV Controls)</span><script>document.addEventListener('DOMContentLoaded', function() { setTimeout(() => { document.getElementById('msg1').style.opacity = '0'; }, 3000); });</script></button>
+
+                    <div id="advancedControlsContainer">
+                        <div class="control-group">
+                            <label for="releaseTime">Release Time (s)</label>
+                            <div class="value-input-group">
+                                <input type="range" id="releaseTime" min="0.01" max="2.0" step="0.01" value="0.1" data-link="releaseTimeInput" oninput="linkSlider(this); generateCode(); if (loopMode > 0) playCustomSound();">
+                                <input type="number" id="releaseTimeInput" class="value-input" min="0.01" max="2.0" step="0.01" value="0.1" data-link="releaseTime" oninput="linkInput(this); generateCode(); if (loopMode > 0) playCustomSound();">
+                            </div>
+                        </div>
+
+                        <div class="control-group">
+                            <label for="lfoRate">LFO Rate (Hz)</label>
+                            <div class="value-input-group">
+                                <input type="range" id="lfoRate" min="0.1" max="20" step="0.1" value="5.0" data-link="lfoRateInput" oninput="linkSlider(this); generateCode(); if (loopMode > 0) playCustomSound();">
+                                <input type="number" id="lfoRateInput" class="value-input" min="0.1" max="20" step="0.1" value="5.0" data-link="lfoRate" oninput="linkInput(this); generateCode(); if (loopMode > 0) playCustomSound();">
+                            </div>
+                        </div>
+
+                        <div class="control-group">
+                            <label for="lfoDepth">LFO Depth (Freq Mod)</label>
+                            <div class="value-input-group">
+                                <input type="range" id="lfoDepth" min="0.0" max="1000.0" step="1.0" value="0.0" data-link="lfoDepthInput" oninput="linkSlider(this); generateCode(); if (loopMode > 0) playCustomSound();">
+                                <input type="number" id="lfoDepthInput" class="value-input" min="0.0" max="1000.0" step="1.0" value="0.0" data-link="lfoDepth" oninput="linkInput(this); generateCode(); if (loopMode > 0) playCustomSound();">
+                            </div>
+                        </div>
+                        
+                        <div class="control-group">
+                            <label for="delayTime">Delay Time (s)</label>
+                            <div class="value-input-group">
+                                <input type="range" id="delayTime" min="0.0" max="1.0" step="0.01" value="0.3" data-link="delayTimeInput" oninput="linkSlider(this); generateCode(); if (loopMode > 0) playCustomSound();">
+                                <input type="number" id="delayTimeInput" class="value-input" min="0.0" max="1.0" step="0.01" value="0.3" data-link="delayTime" oninput="linkInput(this); generateCode(); if (loopMode > 0) playCustomSound();">
+                            </div>
+                        </div>
+
+                        <div class="control-group">
+                            <label for="feedback">Delay Feedback (0.0-0.95)</label>
+                            <div class="value-input-group">
+                                <input type="range" id="feedback" min="0.0" max="0.95" step="0.01" value="0.0" data-link="feedbackInput" oninput="linkSlider(this); generateCode(); if (loopMode > 0) playCustomSound();">
+                                <input type="number" id="feedbackInput" class="value-input" min="0.0" max="0.95" step="0.01" value="0.0" data-link="feedback" oninput="linkInput(this); generateCode(); if (loopMode > 0) playCustomSound();">
+                            </div>
+                        </div>
+
+                        <div class="control-group">
+                            <label for="delayMix">Delay Mix (0.0-1.0)</label>
+                            <div class="value-input-group">
+                                <input type="range" id="delayMix" min="0.0" max="1.0" step="0.01" value="0.0" data-link="delayMixInput" oninput="linkSlider(this); generateCode(); if (loopMode > 0) playCustomSound();">
+                                <input type="number" id="delayMixInput" class="value-input" min="0.0" max="1.0" step="0.01" value="0.0" data-link="delayMix" oninput="linkInput(this); generateCode(); if (loopMode > 0) playCustomSound();">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="codeOutputContainer">
+                        <div id="codeHeader" onclick="openCodeModal()">
+                            <span style="font-size: 1.1em;">Code Script (.js) </span>
+                            <div>
+                                <button class="code-action-btn" id="editBtn" onclick="editCode(event)">⌨</button>
+                                <button class="code-action-btn" onclick="copyCode(event)">⛶</button>
+                            </div>
+                        </div>
+                        <textarea id="codeOutput" readonly></textarea>
+                    </div>
+                </div>
+                
+                <div id="stickyActions">
+                    <div class="action-button-group">
+                        <button id="loopBtn" onclick="toggleLoop()"><b>∞</b></button>
+                        <button id="shuffleVisualizerBtn" onclick="shuffleVisualizer()"><b>⌘</b></button>
+                        <button id="playBtn" onclick="playCustomSound()">SOUND</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="mobile-fixed-buttons">
+        <button id="loopBtn" onclick="toggleLoop()"><b>∞</b></button>
+        <button id="shuffleVisualizerBtn" onclick="shuffleVisualizer()"><b>⌘</b></button>
+        <button id="playBtn" onclick="playCustomSound()">SOUND</button>
+    </div>
+
+    <div class="side-buttons-container left" id="sideButtons">
+        <button class="action-btn" id="resetBtn" onclick="resetButtonAction(event)">⊘</button>
+        <button class="action-btn" id="themeToggleBtn" onclick="toggleTheme()">⽉</button>
+        <button class="action-btn" id="exportBtn" onclick="exportAudio(event)">E</button>
+    </div>
+
+    <div class="corner-button" id="leftCornerBtn"></div>
+    <div class="corner-button" id="rightCornerBtn"></div>
+
+    <div id="codeModalBackdrop" class="hidden">
+        <div id="codeModalPanel">
+        </div>
+    </div>
+
+    <footer style="z-index: 5; text-align: center; margin-top: 20px; color: #555; padding: 10px; position: relative;"><span id="revealTrigger" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; cursor: pointer; z-index: 15; opacity: 0; pointer-events: none;"></span><a href="https://xetsue.github.io/" target="_blank" rel="noopener noreferrer" id="targetLink" style="color: inherit; text-decoration: none; opacity: 1; pointer-events: auto; transition: opacity 0.5s ease-in-out; z-index: 10;">xetsue.github.io</a></footer>
+    <script>document.addEventListener('DOMContentLoaded', function() { const trigger = document.getElementById('revealTrigger'); const link = document.getElementById('targetLink'); const hideLink = () => { link.style.opacity = '0'; link.style.pointerEvents = 'none'; trigger.style.opacity = '1'; trigger.style.pointerEvents = 'auto'; }; setTimeout(hideLink, 1500); trigger.addEventListener('click', function() { link.style.opacity = '1'; link.style.pointerEvents = 'auto'; trigger.style.opacity = '0'; trigger.style.pointerEvents = 'none'; setTimeout(hideLink, 2000); }); });</script>
+    
+    <script>
+        let audioContext;
+        let analyser;
+        let animationFrameId = null;
+        let loopMode = 0;
+        const LOOP_SYMBOLS = ['∞', '∞', '∞'];
+        let currentSound = null;
+        let originalCodeContainerParent = null;
+        let isAdvancedVisible = false;
+
+        const DEFAULTS = {
+            waveType: 'sine',
+            filterType: 'lowpass',
+            startFreq: 1000,
+            endFreq: 1000,
+            audioDuration: 0.7, 
+            decayTime: 0.07,
+            attackTime: 0.005,
+            filterFreq: 4000,
+            filterQ: 1.0,
+            sustainLevel: 0.5,
+            releaseTime: 0.1,
+            lfoRate: 5.0,
+            lfoDepth: 0.0,
+            delayTime: 0.3,
+            feedback: 0.0,
+            delayMix: 0.0
+        };
+        
+        const COLLAPSED_DEFAULTS = {
+            sustainLevel: 0.0001,
+            releaseTime: 0.01,
+            lfoDepth: 0.0,
+            delayTime: 0.0,
+            feedback: 0.0,
+            delayMix: 0.0
+        };
+
+        const WAVE_OPTIONS = ['sine', 'square', 'sawtooth', 'triangle'];
+        const FILTER_OPTIONS = ['lowpass', 'highpass', 'bandpass', 'notch'];
+        const THEMES = ['default', 'light-theme', 'retro-dark-theme', 'retro-light-theme'];
+        const VISUALIZER_TYPES = ['bars', 'line', 'circle'];
+        let currentThemeIndex = 0;
+        let currentVisualizerIndex = 0;
+
+        function initSelects() {
+            const waveSelect = document.getElementById('waveType');
+            const filterSelect = document.getElementById('filterType');
+            WAVE_OPTIONS.forEach(opt => waveSelect.options.add(new Option(opt.charAt(0).toUpperCase() + opt.slice(1), opt)));
+            FILTER_OPTIONS.forEach(opt => filterSelect.options.add(new Option(opt.charAt(0).toUpperCase() + opt.slice(1), opt)));
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initSelects();
+            
+            isAdvancedVisible = localStorage.getItem('synthAdvancedVisible') === 'true';
+            const advancedContainer = document.getElementById('advancedControlsContainer');
+            const arrow = document.querySelector('#advancedToggle .arrow');
+            if(isAdvancedVisible){
+                advancedContainer.style.display = 'grid';
+                if(arrow) arrow.style.transform = 'rotate(180deg)';
+            } else {
+                advancedContainer.style.display = 'none';
+                if(arrow) arrow.style.transform = 'rotate(0deg)';
+            }
+            document.getElementById('advancedToggle').addEventListener('click', toggleAdvancedControls);
+
+            loadSettings();
+            generateCode();
+            
+            const sideButtons = document.getElementById('sideButtons');
+            const storedSide = localStorage.getItem('synthButtonSide') || 'left'; 
+            
+            sideButtons.classList.remove('left', 'right');
+            sideButtons.classList.add(storedSide);
+            
+            originalCodeContainerParent = document.getElementById('codeOutputContainer').parentElement;
+
+            const savedVisualizer = localStorage.getItem('synthVisualizerType') || 'bars';
+            currentVisualizerIndex = VISUALIZER_TYPES.indexOf(savedVisualizer);
+            if (currentVisualizerIndex === -1) currentVisualizerIndex = 0;
+            drawBlankVisualizer();
+
+            document.getElementById('leftCornerBtn').addEventListener('click', () => {
+                if (sideButtons.classList.contains('right')) { 
+                    toggleButtonSide('left');
+                }
+            });
+
+            document.getElementById('rightCornerBtn').addEventListener('click', () => {
+                if (sideButtons.classList.contains('left')) { 
+                    toggleButtonSide('right');
+                }
+            });
+            
+            const storedLoopMode = parseInt(localStorage.getItem('synthLoopMode') || '0', 10);
+            loopMode = storedLoopMode;
+            updateLoopButton();
+
+            const savedTheme = localStorage.getItem('synthTheme') || 'default';
+            currentThemeIndex = THEMES.indexOf(savedTheme);
+            if (currentThemeIndex === -1) currentThemeIndex = 0;
+            const themeClass = THEMES[currentThemeIndex];
+            if (themeClass !== 'default') {
+                document.body.classList.add(themeClass);
+            }
+
+            if (window.innerWidth >= 769) {
+                document.getElementById('scrollableControls').appendChild(document.getElementById('codeOutputContainer'));
+            } else {
+                document.querySelector('.controls-group-right').appendChild(document.getElementById('codeOutputContainer'));
+            }
+        });
+
+        function toggleAdvancedControls() {
+            const container = document.getElementById('advancedControlsContainer');
+            const arrow = document.querySelector('#advancedToggle .arrow');
+            isAdvancedVisible = !isAdvancedVisible;
+            if (isAdvancedVisible) {
+                container.style.display = 'grid';
+                arrow.style.transform = 'rotate(180deg)';
+            } else {
+                container.style.display = 'none';
+                arrow.style.transform = 'rotate(0deg)';
+            }
+            localStorage.setItem('synthAdvancedVisible', isAdvancedVisible);
+            generateCode();
+            if (loopMode > 0) {
+                playCustomSound();
+            }
+        }
+
+        function shuffleVisualizer() {
+            currentVisualizerIndex = (currentVisualizerIndex + 1) % VISUALIZER_TYPES.length;
+            localStorage.setItem('synthVisualizerType', VISUALIZER_TYPES[currentVisualizerIndex]);
+            
+            if (!currentSound) {
+                drawBlankVisualizer();
+            }
+
+            const indicator = document.getElementById('visualizer-indicator');
+            const visualizerName = VISUALIZER_TYPES[currentVisualizerIndex];
+            indicator.textContent = visualizerName.charAt(0).toUpperCase() + visualizerName.slice(1);
+            indicator.style.opacity = '1';
+            setTimeout(() => {
+                indicator.style.opacity = '0';
+            }, 1500);
+        }
+
+        function drawBlankVisualizer() {
+            const canvas = document.getElementById('visualizer');
+            const canvasCtx = canvas.getContext('2d');
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+            const style = getComputedStyle(document.body);
+            const bgColor = style.getPropertyValue('--code-bg-color');
+            canvasCtx.fillStyle = bgColor;
+            canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        function initContext() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                analyser = audioContext.createAnalyser();
+            }
+            if (audioContext.state === 'suspended') {
+                audioContext.resume();
+            }
+            return audioContext.currentTime;
+        }
+
+        function linkSlider(slider) {
+            document.getElementById(slider.dataset.link).value = slider.value;
+            saveSettings();
+        }
+        
+        function linkInput(input) {
+            document.getElementById(input.dataset.link).value = input.value;
+            saveSettings();
+        }
+
+        function openCodeModal() {
+            const backdrop = document.getElementById('codeModalBackdrop');
+            const panel = document.getElementById('codeModalPanel');
+            const codeOutputContainer = document.getElementById('codeOutputContainer');
+            
+            if (codeOutputContainer.parentElement !== panel) {
+                panel.appendChild(codeOutputContainer);
+            }
+            
+            codeOutputContainer.style.display = 'block';
+            
+            backdrop.classList.remove('hidden');
+            backdrop.classList.add('visible');
+            backdrop.addEventListener('click', closeModalOutside, false);
+            document.getElementById('codeOutput').readOnly = true;
+            document.getElementById('editBtn').textContent = '⌨';
+        }
+
+        function closeModalOutside(event) {
+            if (event.target === document.getElementById('codeModalBackdrop')) {
+                closeCodeModal();
+            }
+        }
+
+        function closeCodeModal() {
+            const backdrop = document.getElementById('codeModalBackdrop');
+            const codeOutputContainer = document.getElementById('codeOutputContainer');
+            backdrop.classList.remove('visible');
+            backdrop.classList.add('hidden');
+            backdrop.removeEventListener('click', closeModalOutside, false);
+
+            if (originalCodeContainerParent) {
+                originalCodeContainerParent.appendChild(codeOutputContainer);
+            }
+        }
+
+        function stopCurrentSound() {
+             if (currentSound && currentSound.osc) {
+                try {
+                    const now = audioContext.currentTime;
+                    currentSound.gain.gain.cancelScheduledValues(now);
+                    currentSound.gain.gain.setValueAtTime(currentSound.gain.gain.value, now);
+                    currentSound.gain.gain.linearRampToValueAtTime(0.0001, now + 0.05);
+                    currentSound.osc.stop(now + 0.05);
+                    if(currentSound.lfo) currentSound.lfo.stop(now + 0.05);
+                } catch (e) {}
+            }
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+            }
+            drawBlankVisualizer();
+            currentSound = null;
+        }
+        
+        function updateLoopButton() {
+            const buttons = document.querySelectorAll('#loopBtn');
+            buttons.forEach(btn => {
+                btn.innerHTML = `<b>${LOOP_SYMBOLS[loopMode]}</b>`;
+                btn.classList.toggle('active', loopMode > 0);
+                btn.classList.toggle('alt', loopMode === 2);
+            });
+            document.querySelectorAll('#playBtn').forEach(btn => btn.disabled = loopMode > 0);
+            localStorage.setItem('synthLoopMode', loopMode);
+        }
+
+        function toggleLoop() {
+            stopCurrentSound();
+            loopMode = (loopMode + 1) % 3;
+            updateLoopButton();
+
+            if (loopMode > 0) {
+                 playCustomSound();
+            }
+        }
+        
+        function applyADSR(gainNode, settings, now, totalDuration) {
+            const { attackTime, decayTime, sustainLevel, releaseTime } = settings;
+            gainNode.gain.setValueAtTime(0.0, now);
+            gainNode.gain.linearRampToValueAtTime(0.5, now + attackTime);
+            
+            const decayEnd = now + attackTime + decayTime;
+            gainNode.gain.linearRampToValueAtTime(sustainLevel, decayEnd);
+            
+            const releaseStart = now + totalDuration;
+            const releaseEnd = releaseStart + releaseTime;
+            
+            gainNode.gain.setValueAtTime(sustainLevel, releaseStart); 
+            gainNode.gain.linearRampToValueAtTime(0.0001, releaseEnd);
+            
+            return releaseEnd;
+        }
+        
+        function playCustomSound() {
+            stopCurrentSound();
+            if (loopMode === 0) document.querySelectorAll('#playBtn').forEach(btn => btn.disabled = true);
+
+            const now = initContext();
+            const settings = getSettingsFromUI();
+            
+            const osc = audioContext.createOscillator();
+            const filter = audioContext.createBiquadFilter();
+            const gain = audioContext.createGain();
+            let lfo = null;
+            
+            let delayNode;
+            let finalOutput = gain;
+
+            if (settings.delayMix > 0.0) {
+                delayNode = audioContext.createDelay(1.0);
+                const delayFeedbackNode = audioContext.createGain();
+                const wetGain = audioContext.createGain();
+                const dryGain = audioContext.createGain();
+                const merger = audioContext.createGain();
+
+                delayNode.delayTime.setValueAtTime(settings.delayTime, now);
+                delayFeedbackNode.gain.setValueAtTime(settings.feedback, now);
+                wetGain.gain.setValueAtTime(settings.delayMix, now);
+                dryGain.gain.setValueAtTime(1.0 - settings.delayMix, now);
+
+                finalOutput.connect(delayNode); 
+                delayNode.connect(delayFeedbackNode);
+                delayFeedbackNode.connect(delayNode);
+                
+                finalOutput.connect(dryGain);
+                delayNode.connect(wetGain);
+                
+                dryGain.connect(merger);
+                wetGain.connect(merger);
+                
+                finalOutput = merger;
+            }
+
+            osc.type = settings.waveType;
+            filter.type = settings.filterType;
+            
+            if (settings.lfoDepth > 0.0) {
+                lfo = audioContext.createOscillator();
+                lfo.type = 'sine';
+                lfo.frequency.setValueAtTime(settings.lfoRate, now);
+                
+                const lfoGain = audioContext.createGain();
+                lfoGain.gain.setValueAtTime(settings.lfoDepth, now);
+
+                lfo.connect(lfoGain);
+                lfoGain.connect(osc.frequency);
+                lfo.start(now);
+            }
+            
+            osc.connect(filter);
+            filter.connect(gain);
+            finalOutput.connect(analyser);
+            analyser.connect(audioContext.destination);
+            
+            filter.frequency.setValueAtTime(settings.filterFreq, now);
+            filter.Q.setValueAtTime(settings.filterQ, now);
+            
+            osc.frequency.setValueAtTime(settings.startFreq, now);
+            
+            if (loopMode === 2) {
+                osc.loop = true;
+                osc.frequency.linearRampToValueAtTime(settings.endFreq, now + settings.audioDuration);
+                gain.gain.setValueAtTime(0.0, now);
+                gain.gain.linearRampToValueAtTime(0.5, now + settings.attackTime);
+                gain.gain.linearRampToValueAtTime(settings.sustainLevel, now + settings.attackTime + settings.decayTime);
+                gain.gain.setTargetAtTime(settings.sustainLevel, now + settings.attackTime + settings.decayTime, 0.001);
+                osc.start(now);
+            } else {
+                osc.frequency.linearRampToValueAtTime(settings.endFreq, now + settings.audioDuration);
+                const releaseEnd = applyADSR(gain, settings, now, settings.audioDuration);
+                osc.start(now);
+                osc.stop(releaseEnd + 0.05);
+
+                if (loopMode === 1) {
+                    osc.onended = () => {
+                        if (currentSound && currentSound.osc === osc && loopMode === 1) {
+                            currentSound = null;
+                            playCustomSound();
+                        }
+                    };
+                } else {
+                    osc.onended = () => {
+                        document.querySelectorAll('#playBtn').forEach(btn => btn.disabled = false);
+                        if (animationFrameId) {
+                            cancelAnimationFrame(animationFrameId);
+                            animationFrameId = null;
+                        }
+                        drawBlankVisualizer();
+                        currentSound = null;
+                    };
+                }
+            }
+            
+            currentSound = { osc, filter, gain, lfo }; 
+            visualize();
+        }
+
+        function getSettingsFromUI() {
+            const settings = {
+                waveType: document.getElementById('waveType').value,
+                filterType: document.getElementById('filterType').value,
+                startFreq: parseFloat(document.getElementById('startFreqInput').value),
+                endFreq: parseFloat(document.getElementById('endFreqInput').value),
+                audioDuration: parseFloat(document.getElementById('audioDurationInput').value), 
+                decayTime: parseFloat(document.getElementById('decayTimeInput').value),
+                attackTime: parseFloat(document.getElementById('attackTimeInput').value),
+                filterFreq: parseFloat(document.getElementById('filterFreqInput').value),
+                filterQ: parseFloat(document.getElementById('filterQInput').value),
+                sustainLevel: parseFloat(document.getElementById('sustainLevelInput').value),
+            };
+            
+            if (isAdvancedVisible) {
+                settings.releaseTime = parseFloat(document.getElementById('releaseTimeInput').value);
+                settings.lfoRate = parseFloat(document.getElementById('lfoRateInput').value);
+                settings.lfoDepth = parseFloat(document.getElementById('lfoDepthInput').value);
+                settings.delayTime = parseFloat(document.getElementById('delayTimeInput').value);
+                settings.feedback = parseFloat(document.getElementById('feedbackInput').value);
+                settings.delayMix = parseFloat(document.getElementById('delayMixInput').value);
+            } else {
+                settings.releaseTime = COLLAPSED_DEFAULTS.releaseTime;
+                settings.lfoRate = DEFAULTS.lfoRate;
+                settings.lfoDepth = COLLAPSED_DEFAULTS.lfoDepth;
+                settings.delayTime = COLLAPSED_DEFAULTS.delayTime;
+                settings.feedback = COLLAPSED_DEFAULTS.feedback;
+                settings.delayMix = COLLAPSED_DEFAULTS.delayMix;
+            }
+            
+            return settings;
+        }
+        
+        function bufferToWav(buffer, opt) { opt = opt || {}; const numChannels = buffer.numberOfChannels; const sampleRate = buffer.sampleRate; const format = opt.float32 ? 3 : 1; const bitDepth = format === 3 ? 32 : 16; let result; if (numChannels === 2) { result = interleave(buffer.getChannelData(0), buffer.getChannelData(1)); } else { result = buffer.getChannelData(0); } return encodeWAV(result, format, sampleRate, numChannels, bitDepth); }
+        function encodeWAV(samples, format, sampleRate, numChannels, bitDepth) { const bytesPerSample = bitDepth / 8; const blockAlign = numChannels * bytesPerSample; const buffer = new ArrayBuffer(44 + samples.length * bytesPerSample); const view = new DataView(buffer); writeString(view, 0, 'RIFF'); view.setUint32(4, 36 + samples.length * bytesPerSample, true); writeString(view, 8, 'WAVE'); writeString(view, 12, 'fmt '); view.setUint32(16, 16, true); view.setUint16(20, format, true); view.setUint16(22, numChannels, true); view.setUint32(24, sampleRate, true); view.setUint32(28, sampleRate * blockAlign, true); view.setUint16(32, blockAlign, true); view.setUint16(34, bitDepth, true); writeString(view, 36, 'data'); view.setUint32(40, samples.length * bytesPerSample, true); if (format === 1) { floatTo16BitPCM(view, 44, samples); } else { writeFloat32(view, 44, samples); } return view; }
+        function interleave(inputL, inputR) { const length = inputL.length + inputR.length; const result = new Float32Array(length); let index = 0, inputIndex = 0; while (index < length) { result[index++] = inputL[inputIndex]; result[index++] = inputR[inputIndex]; inputIndex++; } return result; }
+        function writeFloat32(output, offset, input) { for (let i = 0; i < input.length; i++, offset += 4) { output.setFloat32(offset, input[i], true); } }
+        function floatTo16BitPCM(output, offset, input) { for (let i = 0; i < input.length; i++, offset += 2) { const s = Math.max(-1, Math.min(1, input[i])); output.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true); } }
+        function writeString(view, offset, string) { for (let i = 0; i < string.length; i++) { view.setUint8(offset + i, string.charCodeAt(i)); } }
+
+        async function exportAudio(e) {
+            e.stopPropagation();
+            const btn = document.getElementById('exportBtn');
+            const originalText = btn.textContent;
+            btn.textContent = '…';
+            btn.disabled = true;
+
+            const settings = getSettingsFromUI();
+            const totalDuration = settings.audioDuration + settings.releaseTime + 0.05;
+            const sampleRate = 44100;
+            const offlineCtx = new OfflineAudioContext(1, sampleRate * totalDuration, sampleRate);
+            
+            const now = offlineCtx.currentTime;
+            const osc = offlineCtx.createOscillator();
+            const filter = offlineCtx.createBiquadFilter();
+            const gain = offlineCtx.createGain();
+            let finalOutput = gain;
+
+            if (settings.delayMix > 0.0) {
+                const delayNode = offlineCtx.createDelay(1.0);
+                const delayFeedbackNode = offlineCtx.createGain();
+                const wetGain = offlineCtx.createGain();
+                const dryGain = offlineCtx.createGain();
+                const merger = offlineCtx.createGain(); 
+
+                delayNode.delayTime.setValueAtTime(settings.delayTime, now);
+                delayFeedbackNode.gain.setValueAtTime(settings.feedback, now);
+                wetGain.gain.setValueAtTime(settings.delayMix, now);
+                dryGain.gain.setValueAtTime(1.0 - settings.delayMix, now);
+
+                finalOutput.connect(delayNode); 
+                delayNode.connect(delayFeedbackNode);
+                delayFeedbackNode.connect(delayNode);
+                finalOutput.connect(dryGain); 
+                delayNode.connect(wetGain);   
+                dryGain.connect(merger);
+                wetGain.connect(merger);
+                finalOutput = merger; 
+            }
+            
+            if (settings.lfoDepth > 0.0) {
+                const lfo = offlineCtx.createOscillator();
+                lfo.type = 'sine';
+                lfo.frequency.setValueAtTime(settings.lfoRate, now);
+                const lfoGain = offlineCtx.createGain();
+                lfoGain.gain.setValueAtTime(settings.lfoDepth, now);
+                lfo.connect(lfoGain);
+                lfoGain.connect(osc.frequency);
+                lfo.start(now);
+            }
+
+            osc.type = settings.waveType;
+            filter.type = settings.filterType;
+            osc.connect(filter);
+            filter.connect(gain);
+            finalOutput.connect(offlineCtx.destination);
+            filter.frequency.setValueAtTime(settings.filterFreq, now);
+            filter.Q.setValueAtTime(settings.filterQ, now);
+            osc.frequency.setValueAtTime(settings.startFreq, now);
+            osc.frequency.linearRampToValueAtTime(settings.endFreq, now + settings.audioDuration);
+            const envelopeEnd = applyADSR(gain, settings, now, settings.audioDuration);
+            osc.start(now);
+            osc.stop(envelopeEnd + 0.05);
+            
+            try {
+                const renderedBuffer = await offlineCtx.startRendering();
+                const wav = bufferToWav(renderedBuffer);
+                const blob = new Blob([wav], { type: 'audio/wav' });
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = URL.createObjectURL(blob);
+                a.download = 'synth.wav';
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(a.href);
+                document.body.removeChild(a);
+            } catch(err) {
+                alert('An error occurred while exporting the audio.');
+            } finally {
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        function drawBars(canvasCtx, dataArray, W, H, color) { const bufferLength = dataArray.length; const barWidth = (W / bufferLength) * 2.5; let x = 0; for (let i = 0; i < bufferLength; i++) { const barHeight = (dataArray[i] / 255) * H; canvasCtx.fillStyle = color; canvasCtx.fillRect(x, H - barHeight, barWidth, barHeight); x += barWidth + 1; } }
+        function drawLine(canvasCtx, dataArray, W, H, color) { const bufferLength = dataArray.length; canvasCtx.lineWidth = 2; canvasCtx.strokeStyle = color; canvasCtx.beginPath(); const sliceWidth = W * 1.0 / bufferLength; let x = 0; for (let i = 0; i < bufferLength; i++) { const v = dataArray[i] / 128.0; const y = v * H / 2; if (i === 0) { canvasCtx.moveTo(x, y); } else { canvasCtx.lineTo(x, y); } x += sliceWidth; } canvasCtx.lineTo(W, H / 2); canvasCtx.stroke(); }
+        function drawCircle(canvasCtx, dataArray, W, H, color) { const bufferLength = dataArray.length; const centerX = W / 2; const centerY = H / 2; const radius = Math.min(W, H) / 3.5; canvasCtx.lineWidth = 2; canvasCtx.strokeStyle = color; canvasCtx.beginPath(); for (let i = 0; i < bufferLength; i++) { const angle = (i / bufferLength) * 2 * Math.PI; const barHeight = (dataArray[i] / 255) * radius * 0.8; const x = centerX + Math.cos(angle) * (radius + barHeight); const y = centerY + Math.sin(angle) * (radius + barHeight); if (i === 0) { canvasCtx.moveTo(x, y); } else { canvasCtx.lineTo(x, y); } } canvasCtx.closePath(); canvasCtx.stroke(); }
+
+        function visualize() {
+            if (!analyser) return;
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+            
+            const canvas = document.getElementById('visualizer');
+            const canvasCtx = canvas.getContext('2d');
+            const style = getComputedStyle(document.body);
+            const bgColor = style.getPropertyValue('--code-bg-color');
+            const textColor = style.getPropertyValue('--text-color');
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+            analyser.fftSize = 2048;
+            
+            const dataArrays = {
+                frequency: new Uint8Array(analyser.frequencyBinCount),
+                time: new Uint8Array(analyser.fftSize)
+            };
+            
+            const draw = () => {
+                if (!currentSound) {
+                    if (animationFrameId) cancelAnimationFrame(animationFrameId);
+                    animationFrameId = null;
+                    drawBlankVisualizer();
+                    return;
+                }
+                animationFrameId = requestAnimationFrame(draw);
+                const visualizerType = VISUALIZER_TYPES[currentVisualizerIndex];
+                
+                canvasCtx.fillStyle = bgColor;
+                canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                switch (visualizerType) {
+                    case 'line':
+                        analyser.getByteTimeDomainData(dataArrays.time);
+                        drawLine(canvasCtx, dataArrays.time, canvas.width, canvas.height, textColor);
+                        break;
+                    case 'circle':
+                        analyser.getByteFrequencyData(dataArrays.frequency);
+                        drawCircle(canvasCtx, dataArrays.frequency, canvas.width, canvas.height, textColor);
+                        break;
+                    default:
+                        analyser.getByteFrequencyData(dataArrays.frequency);
+                        drawBars(canvasCtx, dataArrays.frequency, canvas.width, canvas.height, textColor);
+                        break;
+                }
+            };
+            draw();
+        }
+
+        function generateCode() {
+            const s = getSettingsFromUI();
+            let delayCode = '';
+            let lfoCode = '';
+            let connections = `
+    osc.connect(filter);
+    filter.connect(gain);`;
+            
+            if (s.lfoDepth > 0.0) {
+                lfoCode = `
+    const LFO_RATE = ${s.lfoRate.toFixed(3)};
+    const LFO_DEPTH = ${s.lfoDepth.toFixed(3)};
+    const lfo = audioContext.createOscillator();
+    lfo.type = 'sine';
+    lfo.frequency.setValueAtTime(LFO_RATE, now);
+    const lfoGain = audioContext.createGain();
+    lfoGain.gain.setValueAtTime(LFO_DEPTH, now);
+    lfo.connect(lfoGain);
+    lfoGain.connect(osc.frequency);
+    lfo.start(now);
+    osc.onended = () => {
+        lfo.stop(now + DURATION + RELEASE_TIME + 0.05);
+    };`;
+            }
+
+            if (s.delayMix > 0.0) {
+                delayCode = `
+    const DELAY_TIME = ${s.delayTime.toFixed(3)};
+    const FEEDBACK = ${s.feedback.toFixed(3)};
+    const DELAY_MIX = ${s.delayMix.toFixed(3)};
+    const delayNode = audioContext.createDelay(1.0);
+    const delayFeedbackNode = audioContext.createGain();
+    const wetGain = audioContext.createGain();
+    const dryGain = audioContext.createGain();
+    const merger = audioContext.createGain();
+    delayNode.delayTime.setValueAtTime(DELAY_TIME, now);
+    delayFeedbackNode.gain.setValueAtTime(FEEDBACK, now);
+    wetGain.gain.setValueAtTime(DELAY_MIX, now);
+    dryGain.gain.setValueAtTime(1.0 - DELAY_MIX, now);
+    gain.connect(delayNode); 
+    delayNode.connect(delayFeedbackNode);
+    delayFeedbackNode.connect(delayNode);
+    gain.connect(dryGain);
+    delayNode.connect(wetGain);   
+    dryGain.connect(merger);
+    wetGain.connect(merger);
+    merger.connect(audioContext.destination);
+    osc.onended = () => {
+        delayNode.disconnect();
+        delayFeedbackNode.disconnect();
+        wetGain.disconnect();
+        dryGain.disconnect();
+        merger.disconnect();
+    };
+    return osc;
+}
+`.trim();
+                connections = '';
+            } else {
+                 connections += `
+    gain.connect(audioContext.destination);`;
+            }
+
+            const code = `
+function createCustomTone(audioContext, loopMode = 0) {
+    const now = audioContext.currentTime;
+    const osc = audioContext.createOscillator();
+    const filter = audioContext.createBiquadFilter();
+    const gain = audioContext.createGain();
+    const WAVE_TYPE = '${s.waveType}';
+    const FILTER_TYPE = '${s.filterType}';
+    const START_FREQ = ${s.startFreq.toFixed(3)};
+    const END_FREQ = ${s.endFreq.toFixed(3)};
+    const DURATION = ${s.audioDuration.toFixed(3)};
+    const ATTACK_TIME = ${s.attackTime.toFixed(3)};
+    const DECAY_TIME = ${s.decayTime.toFixed(3)};
+    const SUSTAIN_LEVEL = ${s.sustainLevel.toFixed(3)};
+    const RELEASE_TIME = ${s.releaseTime.toFixed(3)};
+    const FILTER_FREQ = ${s.filterFreq.toFixed(3)};
+    const FILTER_Q = ${s.filterQ.toFixed(3)};
+    let isLooped = loopMode > 0;
+    osc.type = WAVE_TYPE;
+    filter.type = FILTER_TYPE;
+    ${connections}
+    filter.frequency.setValueAtTime(FILTER_FREQ, now);
+    filter.Q.setValueAtTime(FILTER_Q, now);
+    osc.frequency.setValueAtTime(START_FREQ, now);
+    osc.frequency.linearRampToValueAtTime(END_FREQ, now + DURATION);
+    gain.gain.setValueAtTime(0.0, now);
+    gain.gain.linearRampToValueAtTime(0.5, now + ATTACK_TIME);
+    gain.gain.linearRampToValueAtTime(SUSTAIN_LEVEL, now + ATTACK_TIME + DECAY_TIME);
+    const releaseStart = now + DURATION;
+    const totalDuration = releaseStart + RELEASE_TIME;
+    gain.gain.setValueAtTime(SUSTAIN_LEVEL, releaseStart); 
+    gain.gain.linearRampToValueAtTime(0.0001, totalDuration);
+    ${lfoCode}
+    osc.start(now);
+    osc.stop(totalDuration + 0.05);
+    osc.onended = () => {
+        osc.disconnect();
+        filter.disconnect();
+        gain.disconnect();
+    };
+    return osc;
+}
+${delayCode ? delayCode : '`\n`.trim();'}
+`.trim();
+            document.getElementById('codeOutput').value = code;
+        }
+
+        function copyCode(e) { e.stopPropagation(); const codeOutput = document.getElementById('codeOutput'); codeOutput.select(); document.execCommand('copy'); const btn = e.target.closest('button'); const originalText = btn.textContent; btn.textContent = '☻'; setTimeout(() => { btn.textContent = originalText; }, 1000); }
+        function editCode(e) { e.stopPropagation(); const codeOutput = document.getElementById('codeOutput'); const editBtn = document.getElementById('editBtn'); if (codeOutput.readOnly) { codeOutput.readOnly = false; editBtn.textContent = '⎗'; } else { const settings = parseCode(codeOutput.value); if (settings) { loadSettings(settings); generateCode(); editBtn.textContent = '⌨'; codeOutput.readOnly = true; alert('Settings loaded from script!'); } else { alert('Could not parse settings from script. Ensure all variables are present.'); } } }
+        function parseCode(code) { const settings = {}; const regex = /const ([A-Z_]+) = (.+);/g; let match; while ((match = regex.exec(code)) !== null) { const name = match[1].toLowerCase().replace(/_(\w)/g, (m, c) => c.toUpperCase()); let value = match[2].trim().replace(/[';]/g, ''); if (!isNaN(parseFloat(value))) { value = parseFloat(value); } settings[name] = value; } return (Object.keys(settings).length >= 15) ? settings : null; }
+        function toggleTheme() { const btn = document.getElementById('themeToggleBtn'); btn.classList.add('animate-spin-out'); setTimeout(() => { currentThemeIndex = (currentThemeIndex + 1) % THEMES.length; const newTheme = THEMES[currentThemeIndex]; document.body.className = ''; if (newTheme !== 'default') { document.body.classList.add(newTheme); } localStorage.setItem('synthTheme', newTheme); drawBlankVisualizer(); btn.classList.remove('animate-spin-out'); btn.classList.add('animate-spin-in'); setTimeout(() => btn.classList.remove('animate-spin-in'), 500); }, 500); }
+        function toggleButtonSide(targetDirection) { const container = document.getElementById('sideButtons'); const currentSide = container.classList.contains('right') ? 'right' : 'left'; if (targetDirection === currentSide) return; const buttons = container.querySelectorAll('.action-btn'); buttons.forEach(btn => btn.classList.add('animate-spin-out')); setTimeout(() => { container.classList.remove('right', 'left'); container.classList.add(targetDirection); localStorage.setItem('synthButtonSide', targetDirection); buttons.forEach(btn => { btn.classList.remove('animate-spin-out'); btn.classList.add('animate-spin-in'); }); setTimeout(() => buttons.forEach(btn => btn.classList.remove('animate-spin-in')), 500); }, 500); }
+        function resetButtonAction(e) { e.stopPropagation(); if (confirm('Are you sure you want to reset all synthesizer settings to default?')) { localStorage.removeItem('synthSettings'); loadSettings(DEFAULTS); generateCode(); stopCurrentSound(); loopMode = 0; updateLoopButton(); } }
+
+        function loadSettings(customSettings) {
+            let settings;
+            if (customSettings) {
+                settings = customSettings;
+            } else {
+                try {
+                    const savedSettings = localStorage.getItem('synthSettings');
+                    settings = savedSettings ? JSON.parse(savedSettings) : DEFAULTS;
+                } catch {
+                    settings = DEFAULTS;
+                }
+            }
+            Object.keys(DEFAULTS).forEach(key => {
+                const value = settings[key] !== undefined ? settings[key] : DEFAULTS[key];
+                const el = document.getElementById(key);
+                const inputEl = document.getElementById(key + 'Input');
+                if(el) el.value = value;
+                if(inputEl) inputEl.value = value;
+            });
+        }
+        function saveSettings() { localStorage.setItem('synthSettings', JSON.stringify(getSettingsFromUI())); }
+    </script>
+</body>
+</html>
