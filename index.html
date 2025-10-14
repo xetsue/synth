@@ -16,7 +16,7 @@
             --op-text-color: black;
             --loop-color: #4CAF50;
             --loop-alt-color: #FF9800;
-            #metadataContainer input { border: 1px solid var(--border-color); width: 100%; border-radius: 5px; box-sizing: border-style; border-style: 1px solid; font-family: Monospace; background-color: black; color: white;}
+            #metadataContainer input { border: 1px solid var(--border-color); width: 100%; border-radius: 5px; box-sizing: border-box; border-style: 1px solid; font-family: Monospace; background-color: black; color: white;}
         }
 
         body.light-theme {
@@ -44,7 +44,7 @@
         }
 
         body.retro-dark-theme {
-        	#metadataContainer input { width: 100%; border-radius: 0px; box-sizing: border-style; font-family: Monospace; background-color: #1a1a1a; color: white;}
+        	#metadataContainer input { width: 100%; border-radius: 0px; box-sizing: border-box; font-family: Monospace; background-color: #1a1a1a; color: white;}
             --bg-color: #333333;
             --code-bg-color: #222222;
             --text-color: #f0f0f0;
@@ -393,7 +393,7 @@
         #reverseBtn {
             width: 100%; 
             margin: 10px 0; 
-            padding: 8px; 
+            padding: 10px; 
             font-family: inherit; 
             border: 1px solid var(--border-color); 
             border-radius: inherit;
@@ -836,11 +836,13 @@
                 border-top: none;
             }
             #audioEditorContainer {
-                width: 400px;
-                justify-items: center;
-                box-sizing: border-box;
-            	max-width: 100%;
-            	.control-group { width: 350px; display: flex; flex-direction: column;}
+            	left:0; right: 0;
+            	overflow-x: hidden;
+            	flex-grow: 1;
+                max-width: 95%; 
+            	margin-left:auto; 
+            	margin-right:auto;
+            	.control-group { width: 100%; display: flex; flex-direction: column;}
             	
         	}
         	
@@ -857,8 +859,8 @@
                 gap: 10px;
             }
             #mobile-fixed-buttons #loopBtn, #mobile-fixed-buttons #shuffleVisualizerBtn, #mobile-fixed-buttons #ejectBtn {
-                width: 40px; height: 40px; border-radius: 50%;
-            }
+                width: 50px; height: 50px; border-radius: 20%; 
+            } 
             #mobile-fixed-buttons #playBtn { border-radius: 8px; }
             #codeOutputContainer { margin-top: 30px; }
             .value-input, select { width: 70px; }
