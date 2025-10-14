@@ -1,0 +1,2703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Synthesizer</title>
+    <script src="jsmediatags.min.js"></script>
+    <script src="lame.all.js"></script>
+    <script src="browser-id3-writer.js"></script>
+    <script src="OggVorbisEncoder.js"></script>
+    <style>
+        :root {
+            --bg-color: black;
+            --code-bg-color: #1a1a1a;
+            --text-color: white;
+            --border-color: white;
+            --op-bg-color: white;
+            --op-text-color: black;
+            --loop-color: #4CAF50;
+            --loop-alt-color: #FF9800;
+            #metadataContainer input { border: 1px solid var(--border-color); width: 100%; border-radius: 5px; box-sizing: border-box; border-style: 1px solid; font-family: Monospace; background-color: black; color: white;}
+        }
+
+        body.light-theme {
+            --bg-color: white;
+            --code-bg-color: #f0f0f0;
+            --text-color: black;
+            --border-color: black;
+            --op-bg-color: black;
+            --op-text-color: white;
+            --loop-color: #2E7D32;
+            --loop-alt-color: #E65100;
+            -webkit-tap-highlight-color: rgba(0,0,0,0.1);
+        }
+
+        body.retro-light-theme {
+            --bg-color: white;
+            --code-bg-color: #e0e0e0;
+            --text-color: #000000;
+            --border-color: #000000;
+            --op-bg-color: #e6e6e6;
+            --op-text-color: #000000;
+            --loop-color: #2da195;
+            --loop-alt-color: #b35900;
+            font-family: 'MS Sans Serif', 'Arial', 'Monospace', sans-serif !important;
+        }
+
+        body.retro-dark-theme {
+        	#metadataContainer input { width: 100%; border-radius: 0px; box-sizing: border-box; font-family: Monospace; background-color: #1a1a1a; color: white;}
+            --bg-color: #333333;
+            --code-bg-color: #222222;
+            --text-color: #f0f0f0;
+            --border-color: #f0f0f0;
+            --op-bg-color: #333333;
+            --op-text-color: #f0f0f0;
+            --loop-color: #800000;
+            --loop-alt-color: #D2691E;
+            font-family: 'MS Sans Serif', 'Arial', 'Monospace', sans-serif !important;
+        }
+
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Monospace', monospace;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            -webkit-tap-highlight-color: transparent;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .hidden { display: none !important; }
+
+        #globalTitle {
+            font-size: 1.5em;
+            margin: 0 0 20px 0;
+            font-weight: bold;
+            color: var(--text-color);
+            align-self: flex-start;
+            width: 100%;
+            text-align: center;
+            margin-left: 10px;
+        }
+
+        .main-layout {
+            width: 100%;
+            max-width: 1400px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+            padding-top: 0;
+        }
+
+        .controls-code-column {
+            width: 100%;
+            max-width: 700px;
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+        
+        #visualizer-container {
+            width: 100%;
+            margin-bottom: 30px;
+            box-sizing: border-box;
+            position: relative;
+            cursor: pointer;
+        }
+        
+        #visualizer-container.dragover {
+            border-style: dashed;
+            opacity: 0.7;
+        }
+        
+        #visualizer-indicator {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            z-index: 5;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        body.light-theme #visualizer-indicator {
+            background-color: rgba(255, 255, 255, 0.7);
+            color: black;
+            border: 1px solid rgba(0,0,0,0.2);
+        }
+
+        #visualizer {
+            background-color: var(--code-bg-color);
+            border: 1.7px solid var(--border-color);
+            width: 100%;
+            height: 100px;
+            box-sizing: border-box;
+        }
+
+        .controls-container {
+            background-color: var(--bg-color);
+            border: 1.7px solid var(--border-color);
+            padding: 20px;
+            border-radius: 0;
+            width: 100%;
+            box-sizing: border-box;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px 30px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9em;
+        }
+
+        .value-input-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            width: 100%;
+        }
+
+        input[type="range"] {
+            flex-grow: 1;
+            margin: 0;
+            -webkit-appearance: none;
+            background: var(--border-color);
+            height: 2px;
+            cursor: pointer;
+        }
+        
+        input[type="range"].vertical {
+            writing-mode: bt-lr;
+            -webkit-appearance: slider-vertical;
+            width: 8px;
+            height: 100px;
+            padding: 0 5px;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 10px;
+            height: 10px;
+            border-radius: 0;
+            background: var(--text-color);
+            border: 1px solid var(--border-color);
+        }
+
+        .value-input, select {
+            width: 70px;
+            padding: 5px;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            font-family: inherit;
+            font-size: 0.9em;
+            text-align: right;
+            border-radius: 4px;
+        }
+
+        select {
+            width: 100%;
+            box-sizing: border-box;
+            border-radius: 4px;
+            text-align: left;
+            text-align-last: left;
+            min-width: 120px;
+        }
+
+        .action-button-group {
+            grid-column: 1 / -1;
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        #advancedToggle {
+            cursor: pointer;
+            font-weight: bold;
+            user-select: none;
+            padding: 10px 20px;
+            border: 1.7px solid var(--border-color);
+            margin-top: 20px;
+            text-align: center;
+            width: 100%;
+            background-color: transparent;
+            color: var(--text-color);
+            font-family: inherit;
+            font-size: 1em;
+            border-radius: 4px;
+            display: flex;
+            justify-content: left;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.1s;
+        }
+
+        #advancedToggle:active {
+            filter: invert(100%);
+        }
+        
+        #advancedToggle .arrow {
+            display: inline-block;
+            transition: transform 0.2s;
+        }
+
+        #advancedControlsContainer {
+            display: none;
+            grid-template-columns: 1fr;
+            gap: 20px;
+            padding-top: 20px;
+        }
+
+        #playBtn, #ejectBtn {
+            flex-grow: 1;
+            padding: 10px 20px;
+            font-size: 1.1em;
+            background-color: var(--op-bg-color);
+            color: var(--op-text-color);
+            border: 2px solid var(--border-color);
+            cursor: pointer;
+            font-family: inherit;
+            border-radius: 8px;
+            transition: all 0.1s;
+        }
+        
+        #ejectBtn {
+            flex-grow: 0;
+            width: 40px;
+            height: 40px;
+            padding: 0;
+            border-radius: 50%;
+        }
+
+
+        #loopBtn, #shuffleVisualizerBtn {
+            width: 40px;
+            height: 40px;
+            padding: 0;
+            font-size: 1.1em;
+            background-color: var(--op-bg-color);
+            color: var(--op-text-color);
+            border: 2px solid var(--border-color);
+            cursor: pointer;
+            font-family: inherit;
+            border-radius: 50%;
+            flex-shrink: 0;
+            transition: all 0.1s;
+        }
+
+        #loopBtn.active {
+            background-color: var(--loop-color);
+            color: var(--op-bg-color);
+            border-color: var(--loop-color);
+        }
+
+        #loopBtn.active.alt {
+            background-color: var(--loop-alt-color);
+            border-color: var(--loop-alt-color);
+        }
+
+        #playBtn:active:not(:disabled), #loopBtn:active:not(.active), #shuffleVisualizerBtn:active, #ejectBtn:active {
+            filter: invert(100%);
+        }
+        #loopBtn.active:active {
+            filter: brightness(80%);
+        }
+        #playBtn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        #audioEditorContainer {
+            width: 100%;
+        }
+
+        #progressBarContainer {
+            width: 100%;
+            height: 10px;
+            background-color: var(--code-bg-color);
+            cursor: pointer;
+            margin-bottom: 10px;
+            border: 1.7px solid var(--border-color);
+            border-radius: 10px;
+        }
+        #progressBar {
+            width: 0%;
+            height: 100%;
+            background-color: var(--text-color);
+        }
+        
+        #equalizerContainer {
+            display: flex;
+            justify-content: space-around;
+            padding: 20px 0;
+            gap: 10px;
+        }
+        .eq-band {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 0.7em;
+            position: relative;
+        }
+        .eq-band .tooltip {
+            visibility: hidden;
+            width: 120px;
+            background-color: black;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px 0;
+            position: absolute;
+            z-index: 1;
+            bottom: 115%;
+            left: 50%;
+            margin-left: -60px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .eq-band:hover .tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+        
+        #metadataContainer {
+            display: grid;
+            grid-template-columns: 100px 1fr;
+            gap: 10px 20px;
+            align-items: center;
+        }
+        #metadataContainer input { width: 100%; font-family: Monospace,monospace; background-color: inherit;}
+        #coverArt { width: 100px; height: 100px; object-fit: cover; background-color: var(--code-bg-color); border: 1px solid var(--border-color); cursor: pointer; }
+        #coverArt.disabled { filter: grayscale(1); cursor: not-allowed; pointer-events: none; }
+        .metadata-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        
+        #oggInfoContainer {
+            padding: 10px;
+            background-color: var(--code-bg-color);
+            border: 1px solid var(--border-color);
+            font-size: 0.9em;
+            line-height: 1.6;
+        }
+
+        #reverseBtn {
+            width: 100%; 
+            margin: 10px 0; 
+            padding: 10px; 
+            font-family: inherit; 
+            border: 1px solid var(--border-color); 
+            border-radius: inherit;
+            background-color: var(--op-bg-color); 
+            color: var(--op-text-color);
+            transition: all 0.1s;
+        }
+        #reverseBtn.active {
+            background-color: var(--loop-color);
+            color: var(--op-bg-color);
+            border-color: var(--loop-color);
+        }
+        #reverseBtn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        #codeOutputContainer, #rawStringsContainer {
+            background-color: var(--code-bg-color);
+            border: 2px solid var(--border-color);
+            padding: 15px;
+            border-radius: 0;
+            width: 100%;
+            margin-top: 30px;
+            margin-bottom: 0;
+            box-sizing: border-box;
+            transition: all 0.3s ease-in-out;
+        }
+
+        #codeHeader, #rawStringsHeader {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+            height: 100%;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        #codeHeader div, #rawStringsHeader div {
+            display: flex;
+            gap: 10px;
+            height: 100%;
+            align-items: center;
+        }
+
+        #codeOutput, #rawStringsOutput {
+            width: 100%;
+            height: 250px;
+            border: none;
+            background: none;
+            color: var(--text-color);
+            font-family: 'Monospace', monospace;
+            font-size: 12px;
+            resize: vertical;
+            padding: 10px 0 0 0;
+            box-sizing: border-box;
+            line-height: 1.4;
+            display: block;
+            border-radius: 0;
+            transition: all 0.2s;
+        }
+
+        .code-action-btn {
+            width: 30px;
+            height: 30px;
+            border-radius: 4px;
+            background-color: transparent;
+            border: 1.5px solid var(--border-color);
+            color: var(--text-color);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            font-family: 'Monospace', monospace;
+            box-sizing: border-box;
+            font-size: 14px;
+            line-height: 1;
+            transition: all 0.3s;
+        }
+
+        .code-action-btn:active {
+            filter: invert(100%);
+        }
+
+        .side-buttons-container {
+            position: fixed;
+            top: 20px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: row;
+            gap: 10px;
+            transition: left 0.5s, right 0.5s;
+        }
+
+        .side-buttons-container.right {
+            right: 20px;
+            left: unset;
+        }
+
+        .side-buttons-container.left {
+            left: 20px;
+            right: unset;
+        }
+
+        .side-buttons-container .action-btn {
+            width: 40px;
+            height: 40px;
+            font-size: 18px;
+            border-radius: 50%;
+            background-color: var(--op-bg-color);
+            border: 1.7px solid var(--op-bg-color);
+            color: var(--op-text-color);
+            transform-origin: center center;
+            transition: all 0.1s;
+        }
+
+        .corner-button {
+            position: fixed;
+            top: 0;
+            width: 25vw;
+            height: 5vh;
+            z-index: 999;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        #leftCornerBtn { left: 0; }
+        #rightCornerBtn { right: 0; }
+        .animate-spin-out { animation: spinShrinkDisappear 0.5s forwards; }
+        .animate-spin-in { animation: spinGrowAppear 0.5s forwards; }
+
+        @keyframes spinShrinkDisappear {
+            0% { transform: rotate(0deg) scale(1); opacity: 1; }
+            100% { transform: rotate(-720deg) scale(0); opacity: 0; }
+        }
+        @keyframes spinGrowAppear {
+            0% { transform: rotate(0deg) scale(0); opacity: 0; }
+            14% { transform: rotate(0deg) scale(0.1); opacity: 0; }
+            100% { transform: rotate(720deg) scale(1); opacity: 1; }
+        }
+
+        #codeModalBackdrop {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        #codeModalBackdrop.visible {
+            display: flex;
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        #codeModalPanel {
+            position: relative;
+            width: 90%;
+            max-width: 650px;
+            max-height: 80vh;
+            overflow: hidden;
+            border-radius: 8px;
+            padding: 15px;
+            box-sizing: border-box;
+            background-color: rgba(255, 255, 255, 0.15);
+            border: 1.5px solid rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+            color: var(--text-color);
+            transition: all 0.3s ease-in-out;
+            transform: scale(0.95);
+            display: flex;
+            flex-direction: column;
+        }
+
+        body.light-theme #codeModalPanel {
+            background-color: rgba(255, 255, 255, 0.6);
+            border: 1.5px solid rgba(0, 0, 0, 0.3);
+        }
+
+        #codeModalBackdrop.visible #codeModalPanel { transform: scale(1); }
+        #codeModalPanel #codeOutputContainer, #codeModalPanel #rawStringsContainer { margin-top: 0 !important; padding: 0 !important; border: none !important; background-color: transparent !important; max-height: 100%; }
+        #codeModalPanel #codeOutput, #codeModalPanel #rawStringsOutput { height: calc(80vh - 100px); resize: none !important; overflow: auto; }
+        .retro-light-theme *, .retro-dark-theme * { transition: none !important; }
+        .retro-light-theme button, .retro-dark-theme button, .retro-light-theme .code-action-btn, .retro-dark-theme .code-action-btn { border-radius: 0; border-style: outset; border-width: 2px; filter: none !important; }
+        .retro-light-theme .side-buttons-container .action-btn, .retro-dark-theme .side-buttons-container .action-btn { border-radius: 0; border-style: outset; }
+        .retro-light-theme button:active:not(:disabled), .retro-dark-theme button:active:not(:disabled), #shuffleVisualizerBtn:active:not(:disabled) { border-style: inset; }
+        .retro-light-theme #shuffleVisualizerBtn:active:not(:disabled) { border-style: groove; background-color: black; }
+        .retro-dark-theme #shuffleVisualizerBtn:active:not(:disabled) { border-style: groove; background-color: white; }
+        .retro-light-theme #playBtn, .retro-light-theme #ejectBtn { border-radius: 0; border-style: outset; border-width: 2px; background-color: #dedede; color: black;}
+		.retro-dark-theme #playBtn, .retro-dark-theme #ejectBtn { border-radius: 0; border-style: outset; border-width: 2px; background-color: #121212; color: white;}
+        .retro-light-theme #loopBtn, .retro-dark-theme #loopBtn, .retro-light-theme #shuffleVisualizerBtn, .retro-dark-theme #shuffleVisualizerBtn { border-radius: 0; border-style: outset; border-width: 2px; background-color: var(--op-bg-color); color: var(--op-text-color); border-color: var(--border-color); }
+        .retro-light-theme #loopBtn.active, .retro-dark-theme #loopBtn.active { border-style: outset; background-color: var(--loop-color); color: white; border-color: var(--border-color); }
+        .retro-light-theme .controls-container { border-radius: 0; border-style: groove; border-width: 2.5px;}
+		.retro-dark-theme .controls-container { border-radius: 0; border-style: outset; border-width: 2.5px; border-color: var(--border-color);}
+        .retro-light-theme #visualizer, .retro-dark-theme #visualizer { border: 1px solid var(--border-color); }
+        .retro-light-theme input[type="text"], .retro-dark-theme input[type="text"], .retro-light-theme input[type="number"], .retro-dark-theme input[type="number"], .retro-light-theme select, .retro-dark-theme select { border-radius: 0; border-style: inset; border-width: 2px; background-color: var(--code-bg-color); }
+        .retro-light-theme #codeModalPanel, .retro-dark-theme #codeModalPanel { border-radius: 0; backdrop-filter: none; -webkit-backdrop-filter: none; background-color: var(--bg-color); border: 2px outset var(--border-color); box-shadow: none; }
+        .retro-light-theme { --border-3d-light: #ffffff; --border-3d-dark: #808080; }
+        .retro-dark-theme { --border-3d-light: #555555; --border-3d-dark: #111111; }
+        .retro-light-theme .controls-container, .retro-dark-theme .controls-container, .retro-light-theme select, .retro-dark-theme select, .retro-light-theme .value-input, .retro-dark-theme .value-input { border-color: var(--border-3d-dark) var(--border-3d-light) var(--border-3d-light) var(--border-3d-dark); }
+        .retro-light-theme button, .retro-dark-theme button, .retro-light-theme .code-action-btn, .retro-dark-theme .code-action-btn { border-color: var(--border-3d-light) var(--border-3d-dark) var(--border-3d-dark) var(--border-3d-light); }
+        .retro-light-theme button:active, .retro-dark-theme button:active, .retro-light-theme #loopBtn.active, .retro-dark-theme #loopBtn.active { border-color: var(--border-3d-dark) var(--border-3d-light) var(--border-3d-light) var(--border-3d-dark); }
+        #mobile-fixed-buttons { display: none; }
+
+        #exportModalBackdrop {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1001;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+        #exportModalBackdrop.visible {
+            display: flex;
+            opacity: 1;
+            pointer-events: auto;
+        }
+        #exportModalPanel {
+            background-color: var(--bg-color);
+            border: 1.7px solid var(--border-color);
+            padding: 25px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 4px 30px rgba(0,0,0,0.3);
+            transform: scale(0.95);
+            transition: transform 0.3s;
+        }
+        #exportModalBackdrop.visible #exportModalPanel {
+            transform: scale(1);
+        }
+        #exportModalPanel h3 {
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
+        .export-options {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .export-options button {
+            flex-grow: 1;
+            padding: 12px;
+            font-size: 1.1em;
+            cursor: pointer;
+            font-family: inherit;
+            background-color: var(--op-bg-color);
+            color: var(--op-text-color);
+            border: 1.7px solid var(--border-color);
+            border-radius: 8px;
+            transition: all 0.1s;
+        }
+        .export-options button:active {
+            filter: invert(100%);
+        }
+        #closeExportModalBtn {
+            width: 100%;
+            padding: 10px;
+            background: transparent;
+            border: 1.7px solid var(--border-color);
+            color: var(--text-color);
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        #closeExportModalBtn:active {
+            background-color: var(--code-bg-color);
+        }
+        .retro-light-theme #exportModalPanel, .retro-dark-theme #exportModalPanel {
+            border-radius: 0;
+            border-style: outset;
+            border-width: 2px;
+        }
+        .retro-light-theme #exportModalPanel button, .retro-dark-theme #exportModalPanel button {
+            border-radius: 0;
+            border-style: outset;
+            border-width: 2px;
+        }
+        .retro-light-theme #exportModalPanel button:active, .retro-dark-theme #exportModalPanel button:active {
+            border-style: inset;
+        }
+
+        @media (min-width: 769px) {
+            body { 
+                padding: 20px; 
+            }
+            #globalTitle { 
+                margin: 0 0 20px 0; 
+                align-self: center; 
+                text-align: center; 
+            }
+            .main-layout {
+                flex-direction: row;
+                justify-content: center;
+                align-items: center;
+                gap: 50px;
+                height: calc(100vh - 40px);
+                max-height: 800px;
+            }
+            .controls-code-column {
+                display: flex;
+                flex-direction: row;
+                gap: 50px;
+                max-width: none;
+                width: 100%;
+                height: 100%;
+                justify-content: center;
+            }
+            #visualizer-container {
+                order: 1;
+                height: 100%;
+                aspect-ratio: 1 / 1;
+                margin: 0;
+                padding: 0;
+                align-self: center;
+                border: 2px solid var(--border-color);
+                max-width: calc(50% - 25px);
+            }
+            #visualizer { 
+                height: 100%; 
+                border: none; 
+            }
+            .controls-group-right {
+                order: 2;
+                display: flex;
+                flex-direction: column;
+                height: 100%;
+                aspect-ratio: 1 / 1;
+                padding-top: 0;
+                border: 2px solid var(--border-color);
+                background-color: var(--bg-color);
+                max-width: calc(50% - 25px);
+            }
+            #scrollableControls {
+                overflow-y: auto;
+                flex-grow: 1;
+                padding: 20px;
+            }
+            .controls-container {
+                grid-template-columns: 1fr 1fr;
+                gap: 15px 20px;
+                border: none;
+                padding: 0;
+            }
+            #advancedControlsContainer {
+                grid-template-columns: 1fr 1fr;
+                gap: 15px 20px;
+            }
+            #codeOutputContainer, #rawStringsContainer {
+                margin-top: 30px;
+                height: auto;
+                border-top: 2px solid var(--border-color);
+                border-left: none; border-right: none; border-bottom: none;
+            }
+            #scrollableControls #codeOutput, #scrollableControls #rawStringsOutput {
+                display: block;
+            }
+            #codeHeader, #rawStringsHeader { 
+                padding-bottom: 10px; 
+            }
+            #stickyActions {
+                flex-shrink: 0;
+                padding: 20px;
+                border-top: 2px solid var(--border-color);
+            }
+            .value-input, select { 
+                width: 50px; 
+            }
+            .value-input-group { 
+                gap: 5px; 
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 60px 10px 100px 10px;
+            } 
+            .header-fixed {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                z-index: 20;
+                background-color: var(--bg-color);
+                border-bottom: 1.7px solid var(--border-color);
+            }
+            #globalTitle {
+                padding: 10px 10px 0 10px;
+                margin: 0;
+                height: 50px;
+                box-sizing: border-box;
+            }
+            .side-buttons-container { top: 5px; left: 10px; right: unset; bottom: unset; }
+            .side-buttons-container.right { right: 10px; left: unset; }
+            .side-buttons-container .action-btn { width: 35px; height: 35px; }
+            .controls-code-column {
+                flex-direction: column;
+                gap: 0;
+                max-width: 100%;
+                width: 100%;
+                margin-top: 150px;
+            }
+            #visualizer-container {
+                position: fixed;
+                top: 50px;
+                left:0; right: 0;
+                z-index: 10;
+                margin-bottom: 0;
+                padding: 10px;
+                border: none;
+                border-bottom: 1.7px solid var(--border-color);
+                height: 150px;
+                max-width: 100%;
+                background-color: var(--bg-color);
+            }
+            #visualizer { height: 100%; border: none; }
+            .controls-group-right { width: 100%; }
+            .controls-container {
+                grid-template-columns: 1fr;
+                padding: 20px 10px;
+                gap: 12px 10px;
+                border-top: none;
+            }
+            #audioEditorContainer {
+            	left:0; right: 0;
+            	overflow-x: hidden;
+            	flex-grow: 1;
+                max-width: 95%; 
+            	margin-left:auto; 
+            	margin-right:auto;
+            	.control-group { width: 100%; display: flex; flex-direction: column;}
+            	
+        	}
+        	
+            #advancedControlsContainer { grid-template-columns: 1fr; }
+            .action-button-group { display: none; }
+            #mobile-fixed-buttons {
+                display: flex;
+                position: fixed;
+                bottom: 0; left: 0; right: 0;
+                z-index: 10;
+                padding: 15px 10px;
+                background-color: var(--bg-color);
+                border-top: 1.7px solid var(--border-color);
+                gap: 10px;
+            }
+            #mobile-fixed-buttons #loopBtn, #mobile-fixed-buttons #shuffleVisualizerBtn, #mobile-fixed-buttons #ejectBtn {
+                width: 50px; height: 50px; border-radius: 20%; 
+            } 
+            #mobile-fixed-buttons #playBtn { border-radius: 8px; }
+            #codeOutputContainer { margin-top: 30px; }
+            .value-input, select { width: 70px; }
+        }
+    </style>
+</head>
+<body id="body">
+    <input type="file" id="audioFileInput" class="hidden" accept="audio/*">
+    <input type="file" id="coverArtInput" class="hidden" accept="image/*">
+    <div class="header-fixed">
+        <h1 id="globalTitle">./SYNTH.</h1>
+    </div>
+    
+    <div class="main-layout">
+        <div class="controls-code-column">
+
+            <div id="visualizer-container">
+                <canvas id="visualizer"></canvas>
+                <div id="visualizer-indicator"></div>
+            </div>
+            
+            <div class="controls-group-right"> 
+                <div id="scrollableControls">
+                    <div id="synthControls">
+                        <div class="controls-container">
+                            <div class="control-group">
+                                <label for="waveType">Wave Type</label>
+                                <select id="waveType" oninput="saveSettings(); generateCode(); if (loopMode > 0) playCustomSound();"></select>
+                            </div>
+
+                            <div class="control-group">
+                                <label for="filterType">Filter Type</label>
+                                <select id="filterType" oninput="saveSettings(); generateCode(); if (loopMode > 0) playCustomSound();"></select>
+                            </div>
+
+                            <div class="control-group">
+                                <label for="startFreq">Start Frequency (Hz)</label>
+                                <div class="value-input-group">
+                                    <input type="range" id="startFreq" min="50" max="4000" step="1" value="1000" data-link="startFreqInput" oninput="linkSlider(this); generateCode(); if (loopMode > 0) playCustomSound();">
+                                    <input type="number" id="startFreqInput" class="value-input" min="50" max="4000" step="1" value="1000" data-link="startFreq" oninput="linkInput(this); generateCode(); if (loopMode > 0) playCustomSound();">
+                                </div>
+                            </div>
+
+                            <div class="control-group">
+                                <label for="endFreq">End Frequency (Hz)</label>
+                                <div class="value-input-group">
+                                    <input type="range" id="endFreq" min="50" max="4000" step="1" value="1000" data-link="endFreqInput" oninput="linkSlider(this); generateCode(); if (loopMode > 0) playCustomSound();">
+                                    <input type="number" id="endFreqInput" class="value-input" min="50" max="4000" step="1" value="1000" data-link="endFreq" oninput="linkInput(this); generateCode(); if (loopMode > 0) playCustomSound();">
+                                </div>
+                            </div>
+
+                            <div class="control-group">
+                                <label for="audioDuration">Note Duration (s)</label>
+                                <div class="value-input-group">
+                                    <input type="range" id="audioDuration" min="0.1" max="5.0" step="0.1" value="0.7" data-link="audioDurationInput" oninput="linkSlider(this); generateCode(); if (loopMode > 0) playCustomSound();">
+                                    <input type="number" id="audioDurationInput" class="value-input" min="0.1" max="5.0" step="0.1" value="0.7" data-link="audioDuration" oninput="linkInput(this); generateCode(); if (loopMode > 0) playCustomSound();">
+                                </div>
+                            </div>
+
+                            <div class="control-group">
+                                <label for="decayTime">Decay Time (s)</label>
+                                <div class="value-input-group">
+                                    <input type="range" id="decayTime" min="0.01" max="0.5" step="0.01" value="0.07" data-link="decayTimeInput" oninput="linkSlider(this); generateCode(); if (loopMode > 0) playCustomSound();">
+                                    <input type="number" id="decayTimeInput" class="value-input" min="0.01" max="0.5" step="0.01" value="0.07" data-link="decayTime" oninput="linkInput(this); generateCode(); if (loopMode > 0) playCustomSound();">
+                                </div>
+                            </div>
+
+                            <div class="control-group">
+                                <label for="attackTime">Attack Time (s)</label>
+                                <div class="value-input-group">
+                                    <input type="range" id="attackTime" min="0.001" max="0.1" step="0.001" value="0.005" data-link="attackTimeInput" oninput="linkSlider(this); generateCode(); if (loopMode > 0) playCustomSound();">
+                                    <input type="number" id="attackTimeInput" class="value-input" min="0.001" max="0.1" step="0.001" value="0.005" data-link="attackTime" oninput="linkInput(this); generateCode(); if (loopMode > 0) playCustomSound();">
+                                </div>
+                            </div>
+
+                            <div class="control-group">
+                                <label for="filterFreq">Filter Frequency (Hz)</label>
+                                <div class="value-input-group">
+                                    <input type="range" id="filterFreq" min="20" max="4000" step="1" value="4000" data-link="filterFreqInput" oninput="linkSlider(this); generateCode(); if (loopMode > 0) playCustomSound();">
+                                    <input type="number" id="filterFreqInput" class="value-input" min="20" max="4000" step="1" value="4000" data-link="filterFreq" oninput="linkInput(this); generateCode(); if (loopMode > 0) playCustomSound();">
+                                </div>
+                            </div>
+                            
+                            <div class="control-group">
+                                <label for="filterQ">Filter Q (Resonance)</label>
+                                <div class="value-input-group">
+                                    <input type="range" id="filterQ" min="0.1" max="30" step="0.1" value="1.0" data-link="filterQInput" oninput="linkSlider(this); generateCode(); if (loopMode > 0) playCustomSound();">
+                                    <input type="number" id="filterQInput" class="value-input" min="0.1" max="30" step="0.1" value="1.0" data-link="filterQ" oninput="linkInput(this); generateCode(); if (loopMode > 0) playCustomSound();">
+                                </div>
+                            </div>
+                            
+                            <div class="control-group">
+                                <label for="sustainLevel">Sustain Level (0.0-1.0)</label>
+                                <div class="value-input-group">
+                                    <input type="range" id="sustainLevel" min="0.0001" max="1.0" step="0.0001" value="0.5" data-link="sustainLevelInput" oninput="linkSlider(this); generateCode(); if (loopMode > 0) playCustomSound();">
+                                    <input type="number" id="sustainLevelInput" class="value-input" min="0.0001" max="1.0" step="0.0001" value="0.5" data-link="sustainLevel" oninput="linkInput(this); generateCode(); if (loopMode > 0) playCustomSound();">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <button id="advancedToggle">•••<span class="arrow"></span><span id="msg1" style="opacity: 1; transition: opacity 0.5s ease-in-out; font-size: small; color: #888;">(Tap For ADV Controls)</span><script>document.addEventListener('DOMContentLoaded', function() { setTimeout(() => { document.getElementById('msg1').style.opacity = '0'; }, 3000); });</script></button>
+
+                        <div id="advancedControlsContainer">
+                            <div class="control-group">
+                                <label for="releaseTime">Release Time (s)</label>
+                                <div class="value-input-group">
+                                    <input type="range" id="releaseTime" min="0.01" max="2.0" step="0.01" value="0.1" data-link="releaseTimeInput" oninput="linkSlider(this); generateCode(); if (loopMode > 0) playCustomSound();">
+                                    <input type="number" id="releaseTimeInput" class="value-input" min="0.01" max="2.0" step="0.01" value="0.1" data-link="releaseTime" oninput="linkInput(this); generateCode(); if (loopMode > 0) playCustomSound();">
+                                </div>
+                            </div>
+
+                            <div class="control-group">
+                                <label for="lfoRate">LFO Rate (Hz)</label>
+                                <div class="value-input-group">
+                                    <input type="range" id="lfoRate" min="0.1" max="20" step="0.1" value="5.0" data-link="lfoRateInput" oninput="linkSlider(this); generateCode(); if (loopMode > 0) playCustomSound();">
+                                    <input type="number" id="lfoRateInput" class="value-input" min="0.1" max="20" step="0.1" value="5.0" data-link="lfoRate" oninput="linkInput(this); generateCode(); if (loopMode > 0) playCustomSound();">
+                                </div>
+                            </div>
+
+                            <div class="control-group">
+                                <label for="lfoDepth">LFO Depth (Freq Mod)</label>
+                                <div class="value-input-group">
+                                    <input type="range" id="lfoDepth" min="0.0" max="1000.0" step="1.0" value="0.0" data-link="lfoDepthInput" oninput="linkSlider(this); generateCode(); if (loopMode > 0) playCustomSound();">
+                                    <input type="number" id="lfoDepthInput" class="value-input" min="0.0" max="1000.0" step="1.0" value="0.0" data-link="lfoDepth" oninput="linkInput(this); generateCode(); if (loopMode > 0) playCustomSound();">
+                                </div>
+                            </div>
+                            
+                            <div class="control-group">
+                                <label for="delayTime">Delay Time (s)</label>
+                                <div class="value-input-group">
+                                    <input type="range" id="delayTime" min="0.0" max="1.0" step="0.01" value="0.3" data-link="delayTimeInput" oninput="linkSlider(this); generateCode(); if (loopMode > 0) playCustomSound();">
+                                    <input type="number" id="delayTimeInput" class="value-input" min="0.0" max="1.0" step="0.01" value="0.3" data-link="delayTime" oninput="linkInput(this); generateCode(); if (loopMode > 0) playCustomSound();">
+                                </div>
+                            </div>
+
+                            <div class="control-group">
+                                <label for="feedback">Delay Feedback (0.0-0.95)</label>
+                                <div class="value-input-group">
+                                    <input type="range" id="feedback" min="0.0" max="0.95" step="0.01" value="0.0" data-link="feedbackInput" oninput="linkSlider(this); generateCode(); if (loopMode > 0) playCustomSound();">
+                                    <input type="number" id="feedbackInput" class="value-input" min="0.0" max="0.95" step="0.01" value="0.0" data-link="feedback" oninput="linkInput(this); generateCode(); if (loopMode > 0) playCustomSound();">
+                                </div>
+                            </div>
+
+                            <div class="control-group">
+                                <label for="delayMix">Delay Mix (0.0-1.0)</label>
+                                <div class="value-input-group">
+                                    <input type="range" id="delayMix" min="0.0" max="1.0" step="0.01" value="0.0" data-link="delayMixInput" oninput="linkSlider(this); generateCode(); if (loopMode > 0) playCustomSound();">
+                                    <input type="number" id="delayMixInput" class="value-input" min="0.0" max="1.0" step="0.01" value="0.0" data-link="delayMix" oninput="linkInput(this); generateCode(); if (loopMode > 0) playCustomSound();">
+                                </div>
+                            </div>
+
+                            <div class="control-group">
+                                <label for="distortionAmount">Distortion Amount</label>
+                                <div class="value-input-group">
+                                    <input type="range" id="distortionAmount" min="0" max="1000" step="1" value="0" data-link="distortionAmountInput" oninput="linkSlider(this); generateCode(); if (loopMode > 0) playCustomSound();">
+                                    <input type="number" id="distortionAmountInput" class="value-input" min="0" max="1000" step="1" value="0" data-link="distortionAmount" oninput="linkInput(this); generateCode(); if (loopMode > 0) playCustomSound();">
+                                </div>
+                            </div>
+
+                            <div class="control-group">
+                                <label for="reverbMix">Reverb Mix (0.0-1.0)</label>
+                                <div class="value-input-group">
+                                    <input type="range" id="reverbMix" min="0.0" max="1.0" step="0.01" value="0.0" data-link="reverbMixInput" oninput="linkSlider(this); generateCode(); if (loopMode > 0) playCustomSound();">
+                                    <input type="number" id="reverbMixInput" class="value-input" min="0.0" max="1.0" step="0.01" value="0.0" data-link="reverbMix" oninput="linkInput(this); generateCode(); if (loopMode > 0) playCustomSound();">
+                                </div>
+                            </div>
+                             <div class="control-group">
+                                <label for="masterVolume">Master Volume (dB)</label>
+                                <div class="value-input-group">
+                                    <input type="range" id="masterVolume" min="-60" max="60" step="0.1" value="0">
+                                    <input type="number" id="masterVolumeInput" class="value-input" min="-60" max="60" step="0.1" value="0">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="audioEditorContainer" class="hidden">
+
+                        <div id="oggInfoContainer" class="hidden"></div>
+                    	
+                    	<div id="metadataContainer">
+                            <img id="coverArt" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" alt="Cover Art">
+                            <div class="metadata-fields">
+                                <input type="text" id="metaTitle" placeholder="Title">
+                                <input type="text" id="metaArtist" placeholder="Artist">
+                                <input type="text" id="metaAlbum" placeholder="Album">
+                                <input type="text" id="metaAlbumArtist" placeholder="Album Artist">
+                                <input type="text" id="metaTrack" placeholder="Track">
+                                <input type="text" id="metaGenre" placeholder="Genre">
+                                <input type="text" id="metaYear" placeholder="Year">
+                            </div>
+                        </div>
+                        
+                        <div id="audioFileInfoContainer" style="margin-top: 15px; font-size: 0.8em; color: #888;"></div>
+                    	 <br>
+                    	 	
+                    	 	<div id="progressBarContainer"><div id="progressBar"></div></div>
+                        
+                        <div id="equalizerContainer"></div>
+                        <button id="reverseBtn">Reverse Audio</button>
+                    	  
+                        <div class="control-group">
+                            <label for="editorVolume">Master Volume (dB)</label>
+                            <div class="value-input-group">
+                                <input type="range" id="editorVolume" min="-50" max="50" step="0.1" value="0">
+                                <input type="number" id="editorVolumeInput" class="value-input" min="-50" max="50" step="0.1" value="0">
+                            </div>
+                        </div>
+                        
+                        <div class="control-group">
+                            <label for="playbackRate">Speed</label>
+                            <div class="value-input-group">
+                                <input type="range" id="playbackRate" min="0.1" max="3.0" step="0.01" value="1.0">
+                                <input type="number" id="playbackRateInput" class="value-input" min="0.1" max="3.0" step="0.01" value="1.0">
+                            </div>
+                        </div>	  
+                        
+                        <div class="control-group">
+                            <label for="editorDistortion">Distortion</label>
+                            <div class="value-input-group">
+                                <input type="range" id="editorDistortion" min="0" max="1000" step="1" value="0">
+                                <input type="number" id="editorDistortionInput" class="value-input" min="0" max="1000" step="1" value="0">
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label for="editorReverb">Reverb</label>
+                            <div class="value-input-group">
+                                <input type="range" id="editorReverb" min="0" max="1" step="0.01" value="0">
+                                <input type="number" id="editorReverbInput" class="value-input" min="0" max="1" step="0.01" value="0">
+                            </div>
+                        </div>
+                        
+                        <div id="rawStringsContainer">
+                            <div id="rawStringsHeader" onclick="openModalFor('rawStringsContainer')">
+                                <span style="font-size: 1.1em;">Watermark / Comments</span>
+                                <div>
+                                    <button class="code-action-btn" onclick="copyRawStrings(event)" title="Copy">⛶</button>
+                                </div>
+                            </div>
+                            <textarea id="rawStringsOutput" placeholder="Enter a secret message or comment to embed in the audio file..."></textarea>
+                        </div>
+
+                    </div> 
+                    
+                    <div id="codeOutputContainer">
+                        <div id="codeHeader" onclick="openModalFor('codeOutputContainer')">
+                            <span style="font-size: 1.1em;">Code Script (.js) </span>
+                            <div>
+                                <button class="code-action-btn" id="editBtn" onclick="editCode(event)">⌨</button>
+                                <button class="code-action-btn" onclick="copyCode(event)">⛶</button>
+                            </div>
+                        </div>
+                        <textarea id="codeOutput" readonly></textarea>
+                    </div>
+                </div>
+                
+                <div id="stickyActions">
+                    <div class="action-button-group">
+                        <button id="loopBtn" onclick="toggleLoop()"><b>∞</b></button>
+                        <button id="shuffleVisualizerBtn" onclick="shuffleVisualizer()"><b>⌘</b></button>
+                        <button id="playBtn" onclick="playCustomSound()">SOUND</button>
+                        <button id="ejectBtn" class="hidden" onclick="ejectAudio()"><b>⏏</b></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="mobile-fixed-buttons">
+        <button id="loopBtn" onclick="toggleLoop()"><b>∞</b></button>
+        <button id="shuffleVisualizerBtn" onclick="shuffleVisualizer()"><b>⌘</b></button>
+        <button id="playBtn" onclick="playCustomSound()">SOUND</button>
+        <button id="ejectBtn" class="hidden" onclick="ejectAudio()"><b>⏏</b></button>
+    </div>
+
+    <div class="side-buttons-container left" id="sideButtons">
+        <button class="action-btn" id="resetBtn" onclick="resetButtonAction(event)">⊘</button>
+        <button class="action-btn" id="themeToggleBtn" onclick="toggleTheme()">⽉</button>
+        <button class="action-btn" id="exportBtn" onclick="exportButtonAction(event)">E</button>
+    </div>
+
+    <div class="corner-button" id="leftCornerBtn"></div>
+    <div class="corner-button" id="rightCornerBtn"></div>
+
+    <div id="codeModalBackdrop" class="hidden">
+        <div id="codeModalPanel">
+        </div>
+    </div>
+
+    <div id="exportModalBackdrop" class="hidden">
+        <div id="exportModalPanel">
+            <h3>Export Audio As</h3>
+            <div class="export-options">
+                <button id="exportWavBtn">WAV</button>
+                <button id="exportMp3Btn">MP3</button>
+                <button id="exportOggBtn">OGG</button>
+            </div>
+            <button id="closeExportModalBtn">Cancel</button>
+        </div>
+    </div>
+
+    <footer style="z-index: 5; text-align: center; margin-top: 20px; color: #555; padding: 10px; position: relative;"><span id="revealTrigger" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; cursor: pointer; z-index: 15; opacity: 0; pointer-events: none;"></span><a href="https://xetsue.github.io/" target="_blank" rel="noopener noreferrer" id="targetLink" style="color: inherit; text-decoration: none; opacity: 1; pointer-events: auto; transition: opacity 0.5s ease-in-out; z-index: 10;">xetsue.github.io</a></footer>
+    <script>document.addEventListener('DOMContentLoaded', function() { const trigger = document.getElementById('revealTrigger'); const link = document.getElementById('targetLink'); const hideLink = () => { link.style.opacity = '0'; link.style.pointerEvents = 'none'; trigger.style.opacity = '1'; trigger.style.pointerEvents = 'auto'; }; setTimeout(hideLink, 1500); trigger.addEventListener('click', function() { link.style.opacity = '1'; link.style.pointerEvents = 'auto'; trigger.style.opacity = '0'; trigger.style.pointerEvents = 'none'; setTimeout(hideLink, 2000); }); });</script>
+    
+    <script>
+        let audioContext;
+        let analyser;
+        let animationFrameId = null;
+        let loopMode = 0;
+        const LOOP_SYMBOLS = ['∞', '∞', '∞'];
+        let currentSound = null;
+        let modalContentId = null;
+        let modalOriginalParent = null;
+        let isAdvancedVisible = false;
+
+        let isAudioFileLoaded = false;
+        let audioFileBuffer = null;
+        let originalAudioFileBuffer = null;
+        let audioFileSource = null;
+        let isPlaying = false;
+        let playbackStartTime = 0;
+        let playbackStartOffset = 0;
+        let eqBands = [];
+        let isReversed = false;
+        let loadedFileInfo = {};
+        const WATERMARK_KEY = 'XETSUESECRET';
+
+        let distortionNode, wetGainNode, dryGainNode, convolverNode, masterGainNode;
+
+        const DEFAULTS = {
+            waveType: 'sine',
+            filterType: 'lowpass',
+            startFreq: 1000,
+            endFreq: 1000,
+            audioDuration: 0.7, 
+            decayTime: 0.07,
+            attackTime: 0.005,
+            filterFreq: 4000,
+            filterQ: 1.0,
+            sustainLevel: 0.5,
+            releaseTime: 0.1,
+            lfoRate: 5.0,
+            lfoDepth: 0.0,
+            delayTime: 0.3,
+            feedback: 0.0,
+            delayMix: 0.0,
+            distortionAmount: 0,
+            reverbMix: 0.0,
+            masterVolume: 0,
+        };
+        
+        const COLLAPSED_DEFAULTS = {
+            sustainLevel: 0.0001,
+            releaseTime: 0.01,
+            lfoDepth: 0.0,
+            delayTime: 0.0,
+            feedback: 0.0,
+            delayMix: 0.0,
+            distortionAmount: 0,
+            reverbMix: 0.0,
+            masterVolume: 0
+        };
+
+        const WAVE_OPTIONS = ['sine', 'square', 'sawtooth', 'triangle'];
+        const FILTER_OPTIONS = ['lowpass', 'highpass', 'bandpass', 'notch'];
+        const THEMES = ['default', 'light-theme', 'retro-dark-theme', 'retro-light-theme'];
+        const VISUALIZER_TYPES = ['bars', 'line', 'circle', 'wave', 'rings'];
+        let currentThemeIndex = 0;
+        let currentVisualizerIndex = 0;
+
+        function initSelects() {
+            const waveSelect = document.getElementById('waveType');
+            const filterSelect = document.getElementById('filterType');
+            WAVE_OPTIONS.forEach(opt => waveSelect.options.add(new Option(opt.charAt(0).toUpperCase() + opt.slice(1), opt)));
+            FILTER_OPTIONS.forEach(opt => filterSelect.options.add(new Option(opt.charAt(0).toUpperCase() + opt.slice(1), opt)));
+        }
+        
+        function setupEqualizer() {
+            const eqContainer = document.getElementById('equalizerContainer');
+            eqContainer.innerHTML = '';
+            const frequencies = [60, 170, 310, 600, 1000, 3000, 6000, 12000, 14000];
+            const tooltips = [
+                "Super-Low-Bass (Rumble)", "Center of Bass", "Low-end Mid (Instruments)", "Low-end Mid Focal (Boxy)",
+                "Center Mid (Rhythm/Nasal)", "High Mid (Harmonics)", "Low-end High (Clarity)", "Core High-end (Echo)", "Highest Range (Crisp/Hiss)"
+            ];
+
+            frequencies.forEach((freq, i) => {
+                const bandDiv = document.createElement('div');
+                bandDiv.className = 'eq-band';
+                
+                const label = document.createElement('span');
+                label.textContent = (freq < 1000 ? freq : (freq/1000) + 'k') + 'Hz';
+                
+                const slider = document.createElement('input');
+                slider.type = 'range';
+                slider.min = -20;
+                slider.max = 20;
+                slider.step = 0.1;
+                slider.value = 0;
+                slider.className = 'vertical';
+                slider.dataset.index = i;
+                slider.oninput = (e) => {
+                    if(eqBands[i]) eqBands[i].gain.value = parseFloat(e.target.value);
+                };
+                
+                const tooltip = document.createElement('span');
+                tooltip.className = 'tooltip';
+                tooltip.textContent = tooltips[i];
+                
+                bandDiv.appendChild(label);
+                bandDiv.appendChild(slider);
+                bandDiv.appendChild(tooltip);
+                eqContainer.appendChild(bandDiv);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initSelects();
+            setupEqualizer();
+            
+            isAdvancedVisible = localStorage.getItem('synthAdvancedVisible') === 'true';
+            const advancedContainer = document.getElementById('advancedControlsContainer');
+            const arrow = document.querySelector('#advancedToggle .arrow');
+            if(isAdvancedVisible){
+                advancedContainer.style.display = 'grid';
+                if(arrow) arrow.style.transform = 'rotate(180deg)';
+            } else {
+                advancedContainer.style.display = 'none';
+                if(arrow) arrow.style.transform = 'rotate(0deg)';
+            }
+            document.getElementById('advancedToggle').addEventListener('click', toggleAdvancedControls);
+
+            loadSettings();
+            generateCode();
+            
+            const sideButtons = document.getElementById('sideButtons');
+            const storedSide = localStorage.getItem('synthButtonSide') || 'left'; 
+            
+            sideButtons.classList.remove('left', 'right');
+            sideButtons.classList.add(storedSide);
+            
+            const savedVisualizer = localStorage.getItem('synthVisualizerType') || 'bars';
+            currentVisualizerIndex = VISUALIZER_TYPES.indexOf(savedVisualizer);
+            if (currentVisualizerIndex === -1) currentVisualizerIndex = 0;
+            drawBlankVisualizer();
+
+            document.getElementById('leftCornerBtn').addEventListener('click', () => { if (sideButtons.classList.contains('right')) { toggleButtonSide('left'); } });
+            document.getElementById('rightCornerBtn').addEventListener('click', () => { if (sideButtons.classList.contains('left')) { toggleButtonSide('right'); } });
+            
+            const storedLoopMode = parseInt(localStorage.getItem('synthLoopMode') || '0', 10);
+            loopMode = storedLoopMode;
+            updateLoopButton();
+
+            const savedTheme = localStorage.getItem('synthTheme') || 'default';
+            currentThemeIndex = THEMES.indexOf(savedTheme);
+            if (currentThemeIndex === -1) currentThemeIndex = 0;
+            const themeClass = THEMES[currentThemeIndex];
+            if (themeClass !== 'default') { document.body.classList.add(themeClass); }
+
+            if (window.innerWidth >= 769) {
+                document.getElementById('scrollableControls').appendChild(document.getElementById('codeOutputContainer'));
+                document.getElementById('audioEditorContainer').appendChild(document.getElementById('rawStringsContainer'));
+            } else {
+                document.querySelector('.controls-group-right').appendChild(document.getElementById('codeOutputContainer'));
+                document.querySelector('#audioEditorContainer').appendChild(document.getElementById('rawStringsContainer'));
+            }
+            
+            const visualizerContainer = document.getElementById('visualizer-container');
+            visualizerContainer.addEventListener('click', () => !isAudioFileLoaded && document.getElementById('audioFileInput').click());
+            visualizerContainer.addEventListener('dragover', (e) => { e.preventDefault(); e.stopPropagation(); visualizerContainer.classList.add('dragover'); });
+            visualizerContainer.addEventListener('dragleave', (e) => { e.preventDefault(); e.stopPropagation(); visualizerContainer.classList.remove('dragover'); });
+            visualizerContainer.addEventListener('drop', (e) => { e.preventDefault(); e.stopPropagation(); visualizerContainer.classList.remove('dragover'); const file = e.dataTransfer.files[0]; if (file) loadAudioFile(file); });
+            document.getElementById('audioFileInput').addEventListener('change', (e) => { const file = e.target.files[0]; if (file) loadAudioFile(file); });
+            
+            document.getElementById('progressBarContainer').addEventListener('click', seekAudio);
+            
+            const pbRate = document.getElementById('playbackRate');
+            const pbRateInput = document.getElementById('playbackRateInput');
+            pbRate.addEventListener('input', () => { pbRateInput.value = pbRate.value; if(audioFileSource) audioFileSource.playbackRate.value = parseFloat(pbRate.value); });
+            pbRateInput.addEventListener('input', () => { pbRate.value = pbRateInput.value; if(audioFileSource) audioFileSource.playbackRate.value = parseFloat(pbRate.value); });
+            
+            document.getElementById('reverseBtn').addEventListener('click', reverseAudio);
+            document.getElementById('coverArt').addEventListener('click', () => {
+                if (!document.getElementById('coverArt').classList.contains('disabled')) {
+                    document.getElementById('coverArtInput').click();
+                }
+            });
+            document.getElementById('coverArtInput').addEventListener('change', (e) => { const file = e.target.files[0]; if(file) { const reader = new FileReader(); reader.onload = (ev) => { document.getElementById('coverArt').src = ev.target.result; }; reader.readAsDataURL(file); }});
+            
+            document.addEventListener('keydown', handleKeyboardShortcuts);
+
+            const editorDistortion = document.getElementById('editorDistortion');
+            const editorDistortionInput = document.getElementById('editorDistortionInput');
+            const editorReverb = document.getElementById('editorReverb');
+            const editorReverbInput = document.getElementById('editorReverbInput');
+            
+            editorDistortion.addEventListener('input', () => {
+                editorDistortionInput.value = editorDistortion.value;
+                if (distortionNode) distortionNode.curve = makeDistortionCurve(parseFloat(editorDistortion.value));
+            });
+            editorDistortionInput.addEventListener('input', () => {
+                editorDistortion.value = editorDistortionInput.value;
+                if (distortionNode) distortionNode.curve = makeDistortionCurve(parseFloat(editorDistortionInput.value));
+            });
+            
+            editorReverb.addEventListener('input', () => {
+                editorReverbInput.value = editorReverb.value;
+                if (wetGainNode) wetGainNode.gain.setValueAtTime(parseFloat(editorReverb.value), audioContext.currentTime);
+                if (dryGainNode) dryGainNode.gain.setValueAtTime(1 - parseFloat(editorReverb.value), audioContext.currentTime);
+            });
+            editorReverbInput.addEventListener('input', () => {
+                editorReverb.value = editorReverbInput.value;
+                if (wetGainNode) wetGainNode.gain.setValueAtTime(parseFloat(editorReverb.value), audioContext.currentTime);
+                if (dryGainNode) dryGainNode.gain.setValueAtTime(1 - parseFloat(editorReverb.value), audioContext.currentTime);
+            });
+
+            const synthVolume = document.getElementById('masterVolume');
+            const synthVolumeInput = document.getElementById('masterVolumeInput');
+            const editorVolume = document.getElementById('editorVolume');
+            const editorVolumeInput = document.getElementById('editorVolumeInput');
+
+            const volumeChangeHandler = (value) => {
+                synthVolume.value = value;
+                synthVolumeInput.value = value;
+                editorVolume.value = value;
+                editorVolumeInput.value = value;
+                if(masterGainNode) {
+                    masterGainNode.gain.setValueAtTime(Math.pow(10, parseFloat(value) / 20), audioContext.currentTime);
+                }
+            };
+
+            synthVolume.addEventListener('input', (e) => volumeChangeHandler(e.target.value));
+            synthVolumeInput.addEventListener('input', (e) => volumeChangeHandler(e.target.value));
+            editorVolume.addEventListener('input', (e) => volumeChangeHandler(e.target.value));
+            editorVolumeInput.addEventListener('input', (e) => volumeChangeHandler(e.target.value));
+
+            document.getElementById('exportWavBtn').addEventListener('click', () => startExport('wav'));
+            document.getElementById('exportMp3Btn').addEventListener('click', () => startExport('mp3'));
+            document.getElementById('exportOggBtn').addEventListener('click', () => startExport('ogg'));
+            document.getElementById('closeExportModalBtn').addEventListener('click', hideExportModal);
+            document.getElementById('exportModalBackdrop').addEventListener('click', (e) => {
+                if (e.target.id === 'exportModalBackdrop') hideExportModal();
+            });
+        });
+
+        function toggleAdvancedControls() {
+            const container = document.getElementById('advancedControlsContainer');
+            const arrow = document.querySelector('#advancedToggle .arrow');
+            isAdvancedVisible = !isAdvancedVisible;
+            if (isAdvancedVisible) {
+                container.style.display = 'grid';
+                arrow.style.transform = 'rotate(180deg)';
+            } else {
+                container.style.display = 'none';
+                arrow.style.transform = 'rotate(0deg)';
+            }
+            localStorage.setItem('synthAdvancedVisible', isAdvancedVisible);
+            generateCode();
+            if (loopMode > 0 && !isAudioFileLoaded) { playCustomSound(); }
+        }
+
+        function shuffleVisualizer() {
+            currentVisualizerIndex = (currentVisualizerIndex + 1) % VISUALIZER_TYPES.length;
+            localStorage.setItem('synthVisualizerType', VISUALIZER_TYPES[currentVisualizerIndex]);
+            
+            if (!currentSound && !audioFileSource) { drawBlankVisualizer(); }
+
+            const indicator = document.getElementById('visualizer-indicator');
+            const visualizerName = VISUALIZER_TYPES[currentVisualizerIndex];
+            indicator.textContent = visualizerName.charAt(0).toUpperCase() + visualizerName.slice(1);
+            indicator.style.opacity = '1';
+            setTimeout(() => { indicator.style.opacity = '0'; }, 1500);
+        }
+
+        function drawBlankVisualizer() {
+            const canvas = document.getElementById('visualizer');
+            const canvasCtx = canvas.getContext('2d');
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+            const style = getComputedStyle(document.body);
+            const bgColor = style.getPropertyValue('--code-bg-color');
+            canvasCtx.fillStyle = bgColor;
+            canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        async function createReverb(context) {
+            const duration = 2;
+            const decay = 2;
+            const sampleRate = context.sampleRate;
+            const length = sampleRate * duration;
+            const impulse = context.createBuffer(2, length, sampleRate);
+            const impulseL = impulse.getChannelData(0);
+            const impulseR = impulse.getChannelData(1);
+
+            for (let i = 0; i < length; i++) {
+                const n = length - i;
+                impulseL[i] = (Math.random() * 2 - 1) * Math.pow(n / length, decay);
+                impulseR[i] = (Math.random() * 2 - 1) * Math.pow(n / length, decay);
+            }
+            const convolver = context.createConvolver();
+            convolver.buffer = impulse;
+            return convolver;
+        }
+
+        async function initContext() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                analyser = audioContext.createAnalyser();
+                convolverNode = await createReverb(audioContext);
+                masterGainNode = audioContext.createGain();
+                const initialDb = isAudioFileLoaded ? document.getElementById('editorVolume').value : document.getElementById('masterVolume').value;
+                masterGainNode.gain.value = Math.pow(10, parseFloat(initialDb) / 20);
+                analyser.connect(masterGainNode);
+                masterGainNode.connect(audioContext.destination);
+            }
+            if (audioContext.state === 'suspended') {
+                audioContext.resume();
+            }
+        }
+
+        function linkSlider(slider) {
+            document.getElementById(slider.dataset.link).value = slider.value;
+            saveSettings();
+        }
+        
+        function linkInput(input) {
+            document.getElementById(input.dataset.link).value = input.value;
+            saveSettings();
+        }
+
+        function openModalFor(containerId) {
+            if (window.innerWidth <= 768) {
+                const backdrop = document.getElementById('codeModalBackdrop');
+                const panel = document.getElementById('codeModalPanel');
+                const container = document.getElementById(containerId);
+                
+                if (container.parentElement !== panel) {
+                    modalOriginalParent = container.parentElement;
+                    modalContentId = containerId;
+                    panel.appendChild(container);
+                }
+                
+                container.style.display = 'block';
+                
+                backdrop.classList.remove('hidden');
+                backdrop.classList.add('visible');
+                backdrop.addEventListener('click', closeModalOutside, false);
+            }
+        }
+
+        function closeModalOutside(event) {
+            if (event.target === document.getElementById('codeModalBackdrop')) {
+                closeModal();
+            }
+        }
+
+        function closeModal() {
+            const backdrop = document.getElementById('codeModalBackdrop');
+            if (modalContentId && modalOriginalParent) {
+                const container = document.getElementById(modalContentId);
+                modalOriginalParent.appendChild(container);
+            }
+            backdrop.classList.remove('visible');
+            backdrop.classList.add('hidden');
+            backdrop.removeEventListener('click', closeModalOutside, false);
+            modalContentId = null;
+            modalOriginalParent = null;
+        }
+
+        function stopCurrentSound() {
+             if (currentSound && currentSound.osc) {
+                try {
+                    const now = audioContext.currentTime;
+                    currentSound.gain.gain.cancelScheduledValues(now);
+                    currentSound.gain.gain.setValueAtTime(currentSound.gain.gain.value, now);
+                    currentSound.gain.gain.linearRampToValueAtTime(0.0001, now + 0.05);
+                    currentSound.osc.stop(now + 0.05);
+                    if(currentSound.lfo) currentSound.lfo.stop(now + 0.05);
+                } catch (e) {}
+            }
+            
+            if(audioFileSource) {
+                try { audioFileSource.stop(); } catch(e) {}
+                audioFileSource.disconnect();
+                audioFileSource = null;
+            }
+
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+            }
+            drawBlankVisualizer();
+            currentSound = null;
+            isPlaying = false;
+            if (isAudioFileLoaded) {
+                document.getElementById('reverseBtn').disabled = false;
+            }
+        }
+        
+        function updateLoopButton() {
+            const buttons = document.querySelectorAll('#loopBtn');
+            buttons.forEach(btn => {
+                if(isAudioFileLoaded) {
+                     btn.innerHTML = `<b>∞</b>`;
+                     btn.classList.toggle('active', loopMode > 0);
+                     btn.classList.remove('alt');
+                } else {
+                    btn.innerHTML = `<b>${LOOP_SYMBOLS[loopMode]}</b>`;
+                    btn.classList.toggle('active', loopMode > 0);
+                    btn.classList.toggle('alt', loopMode === 2);
+                }
+            });
+            if(!isAudioFileLoaded) {
+                 document.querySelectorAll('#playBtn').forEach(btn => btn.disabled = loopMode > 0);
+            }
+            localStorage.setItem('synthLoopMode', loopMode);
+        }
+
+        function toggleLoop() {
+            if(isAudioFileLoaded) {
+                loopMode = loopMode === 0 ? 1 : 0;
+                if(audioFileSource) audioFileSource.loop = loopMode > 0;
+            } else {
+                stopCurrentSound();
+                loopMode = (loopMode + 1) % 3;
+                if (loopMode > 0) { playCustomSound(); }
+            }
+            updateLoopButton();
+        }
+        
+        function applyADSR(gainNode, settings, now, totalDuration) {
+            const { attackTime, decayTime, sustainLevel, releaseTime } = settings;
+            gainNode.gain.setValueAtTime(0.0, now);
+            gainNode.gain.linearRampToValueAtTime(0.5, now + attackTime);
+            
+            const decayEnd = now + attackTime + decayTime;
+            gainNode.gain.linearRampToValueAtTime(sustainLevel, decayEnd);
+            
+            const releaseStart = now + totalDuration;
+            const releaseEnd = releaseStart + releaseTime;
+            
+            gainNode.gain.setValueAtTime(sustainLevel, releaseStart); 
+            gainNode.gain.linearRampToValueAtTime(0.0001, releaseEnd);
+            
+            return releaseEnd;
+        }
+        
+        function makeDistortionCurve(amount) {
+            const k = typeof amount === 'number' ? amount : 50;
+            if (k === 0) return null;
+            const n_samples = 44100;
+            const curve = new Float32Array(n_samples);
+            const deg = Math.PI / 180;
+            for (let i = 0; i < n_samples; ++i) {
+                const x = i * 2 / n_samples - 1;
+                curve[i] = (3 + k) * x * 20 * deg / (Math.PI + k * Math.abs(x));
+            }
+            return curve;
+        }
+
+        async function playCustomSound() {
+            if(isAudioFileLoaded) {
+                toggleAudioPlayback();
+                return;
+            }
+            stopCurrentSound();
+            if (loopMode === 0) document.querySelectorAll('#playBtn').forEach(btn => btn.disabled = true);
+
+            await initContext();
+            const now = audioContext.currentTime;
+            const settings = getSettingsFromUI();
+            
+            const osc = audioContext.createOscillator();
+            const filter = audioContext.createBiquadFilter();
+            const gain = audioContext.createGain();
+            let lfo = null;
+            
+            let preEffectNode = gain;
+
+            if (settings.delayMix > 0.0) {
+                const delayNode = audioContext.createDelay(1.0);
+                const delayFeedbackNode = audioContext.createGain();
+                const wetGain = audioContext.createGain();
+                const dryGain = audioContext.createGain();
+                const merger = audioContext.createGain();
+
+                delayNode.delayTime.setValueAtTime(settings.delayTime, now);
+                delayFeedbackNode.gain.setValueAtTime(settings.feedback, now);
+                wetGain.gain.setValueAtTime(settings.delayMix, now);
+                dryGain.gain.setValueAtTime(1.0 - settings.delayMix, now);
+
+                preEffectNode.connect(delayNode); 
+                delayNode.connect(delayFeedbackNode);
+                delayFeedbackNode.connect(delayNode);
+                
+                preEffectNode.connect(dryGain);
+                delayNode.connect(wetGain);
+                
+                dryGain.connect(merger);
+                wetGain.connect(merger);
+                
+                preEffectNode = merger;
+            }
+
+            distortionNode = audioContext.createWaveShaper();
+            distortionNode.curve = makeDistortionCurve(settings.distortionAmount);
+            distortionNode.oversample = '4x';
+            
+            wetGainNode = audioContext.createGain();
+            dryGainNode = audioContext.createGain();
+            wetGainNode.gain.setValueAtTime(settings.reverbMix, now);
+            dryGainNode.gain.setValueAtTime(1.0 - settings.reverbMix, now);
+
+            preEffectNode.connect(distortionNode);
+            distortionNode.connect(dryGainNode);
+            distortionNode.connect(wetGainNode);
+            wetGainNode.connect(convolverNode);
+            dryGainNode.connect(analyser);
+            convolverNode.connect(analyser);
+
+            osc.type = settings.waveType;
+            filter.type = settings.filterType;
+            
+            if (settings.lfoDepth > 0.0) {
+                lfo = audioContext.createOscillator();
+                lfo.type = 'sine';
+                lfo.frequency.setValueAtTime(settings.lfoRate, now);
+                
+                const lfoGain = audioContext.createGain();
+                lfoGain.gain.setValueAtTime(settings.lfoDepth, now);
+
+                lfo.connect(lfoGain);
+                lfoGain.connect(osc.frequency);
+                lfo.start(now);
+            }
+            
+            osc.connect(filter);
+            filter.connect(gain);
+            
+            filter.frequency.setValueAtTime(settings.filterFreq, now);
+            filter.Q.setValueAtTime(settings.filterQ, now);
+            osc.frequency.setValueAtTime(settings.startFreq, now);
+            
+            if (loopMode === 2) {
+                osc.loop = true;
+                osc.frequency.linearRampToValueAtTime(settings.endFreq, now + settings.audioDuration);
+                gain.gain.setValueAtTime(0.0, now);
+                gain.gain.linearRampToValueAtTime(0.5, now + settings.attackTime);
+                gain.gain.linearRampToValueAtTime(settings.sustainLevel, now + settings.attackTime + settings.decayTime);
+                gain.gain.setTargetAtTime(settings.sustainLevel, now + settings.attackTime + settings.decayTime, 0.001);
+                osc.start(now);
+            } else {
+                osc.frequency.linearRampToValueAtTime(settings.endFreq, now + settings.audioDuration);
+                const releaseEnd = applyADSR(gain, settings, now, settings.audioDuration);
+                osc.start(now);
+                osc.stop(releaseEnd + 0.05);
+
+                if (loopMode === 1) {
+                    osc.onended = () => {
+                        if (currentSound && currentSound.osc === osc && loopMode === 1) {
+                            currentSound = null;
+                            playCustomSound();
+                        }
+                    };
+                } else {
+                    osc.onended = () => {
+                        document.querySelectorAll('#playBtn').forEach(btn => btn.disabled = false);
+                        if (animationFrameId) { cancelAnimationFrame(animationFrameId); animationFrameId = null; }
+                        drawBlankVisualizer();
+                        currentSound = null;
+                    };
+                }
+            }
+            
+            currentSound = { osc, filter, gain, lfo }; 
+            visualize();
+        }
+
+        function getSettingsFromUI() {
+            const settings = {
+                waveType: document.getElementById('waveType').value,
+                filterType: document.getElementById('filterType').value,
+                startFreq: parseFloat(document.getElementById('startFreqInput').value),
+                endFreq: parseFloat(document.getElementById('endFreqInput').value),
+                audioDuration: parseFloat(document.getElementById('audioDurationInput').value), 
+                decayTime: parseFloat(document.getElementById('decayTimeInput').value),
+                attackTime: parseFloat(document.getElementById('attackTimeInput').value),
+                filterFreq: parseFloat(document.getElementById('filterFreqInput').value),
+                filterQ: parseFloat(document.getElementById('filterQInput').value),
+                sustainLevel: parseFloat(document.getElementById('sustainLevelInput').value),
+            };
+            
+            if (isAdvancedVisible) {
+                settings.releaseTime = parseFloat(document.getElementById('releaseTimeInput').value);
+                settings.lfoRate = parseFloat(document.getElementById('lfoRateInput').value);
+                settings.lfoDepth = parseFloat(document.getElementById('lfoDepthInput').value);
+                settings.delayTime = parseFloat(document.getElementById('delayTimeInput').value);
+                settings.feedback = parseFloat(document.getElementById('feedbackInput').value);
+                settings.delayMix = parseFloat(document.getElementById('delayMixInput').value);
+                settings.distortionAmount = parseFloat(document.getElementById('distortionAmountInput').value);
+                settings.reverbMix = parseFloat(document.getElementById('reverbMixInput').value);
+                settings.masterVolume = parseFloat(document.getElementById('masterVolumeInput').value);
+            } else {
+                settings.releaseTime = COLLAPSED_DEFAULTS.releaseTime;
+                settings.lfoRate = DEFAULTS.lfoRate;
+                settings.lfoDepth = COLLAPSED_DEFAULTS.lfoDepth;
+                settings.delayTime = COLLAPSED_DEFAULTS.delayTime;
+                settings.feedback = COLLAPSED_DEFAULTS.feedback;
+                settings.delayMix = COLLAPSED_DEFAULTS.delayMix;
+                settings.distortionAmount = COLLAPSED_DEFAULTS.distortionAmount;
+                settings.reverbMix = COLLAPSED_DEFAULTS.reverbMix;
+                settings.masterVolume = COLLAPSED_DEFAULTS.masterVolume;
+            }
+            
+            return settings;
+        }
+        
+        function bufferToWav(buffer, opt, metadata) {
+            opt = opt || {};
+            const numChannels = buffer.numberOfChannels;
+            const sampleRate = buffer.sampleRate;
+            const format = opt.float32 ? 3 : 1;
+            const bitDepth = format === 3 ? 32 : 16;
+            let result;
+            if (numChannels === 2) {
+                result = interleave(buffer.getChannelData(0), buffer.getChannelData(1));
+            } else {
+                result = buffer.getChannelData(0);
+            }
+            return encodeWAV(result, format, sampleRate, numChannels, bitDepth, metadata);
+        }
+
+        function encodeWAV(samples, format, sampleRate, numChannels, bitDepth, metadata) {
+            const bytesPerSample = bitDepth / 8;
+            const blockAlign = numChannels * bytesPerSample;
+            const dataSize = samples.length * bytesPerSample;
+
+            let infoChunkSize = 0;
+            const infoChunks = [];
+            const metaMap = { title: 'INAM', artist: 'IART', album: 'IPRD', year: 'ICRD', track: 'ITRK', genre: 'IGNR', albumArtist: 'TPE2', watermark: 'ICMT' };
+
+            if (metadata) {
+                for (const key in metaMap) {
+                    if (metadata[key] && metadata[key].length > 0) {
+                        const value = metadata[key];
+                        const chunkId = metaMap[key];
+                        let chunkSize = value.length + 1;
+                        if (chunkSize % 2 !== 0) chunkSize++;
+                        infoChunks.push({ id: chunkId, size: chunkSize, value: value });
+                        infoChunkSize += 8 + chunkSize;
+                    }
+                }
+            }
+
+            let listChunkSize = 0;
+            if (infoChunkSize > 0) {
+                listChunkSize = 4 + infoChunkSize;
+            }
+
+            const buffer = new ArrayBuffer(44 + dataSize + (listChunkSize > 0 ? 8 + listChunkSize : 0));
+            const view = new DataView(buffer);
+
+            let offset = 0;
+            const writeString = (str) => {
+                for (let i = 0; i < str.length; i++) {
+                    view.setUint8(offset++, str.charCodeAt(i));
+                }
+            };
+
+            writeString('RIFF');
+            view.setUint32(offset, 36 + dataSize + (listChunkSize > 0 ? 8 + listChunkSize : 0), true); offset += 4;
+            writeString('WAVE');
+            writeString('fmt ');
+            view.setUint32(offset, 16, true); offset += 4;
+            view.setUint16(offset, format, true); offset += 2;
+            view.setUint16(offset, numChannels, true); offset += 2;
+            view.setUint32(offset, sampleRate, true); offset += 4;
+            view.setUint32(offset, sampleRate * blockAlign, true); offset += 4;
+            view.setUint16(offset, blockAlign, true); offset += 2;
+            view.setUint16(offset, bitDepth, true); offset += 2;
+            writeString('data');
+            view.setUint32(offset, dataSize, true); offset += 4;
+
+            if (format === 1) {
+                floatTo16BitPCM(view, offset, samples);
+            } else {
+                writeFloat32(view, offset, samples);
+            }
+            offset += dataSize;
+
+            if (listChunkSize > 0) {
+                writeString('LIST');
+                view.setUint32(offset, listChunkSize, true); offset += 4;
+                writeString('INFO');
+                for (const chunk of infoChunks) {
+                    writeString(chunk.id);
+                    view.setUint32(offset, chunk.value.length + 1, true); offset += 4;
+                    writeString(chunk.value);
+                    view.setUint8(offset++, 0);
+                    if (chunk.size > chunk.value.length + 1) {
+                        view.setUint8(offset++, 0);
+                    }
+                }
+            }
+
+            return view;
+        }
+        function interleave(inputL, inputR) { const length = inputL.length + inputR.length; const result = new Float32Array(length); let index = 0, inputIndex = 0; while (index < length) { result[index++] = inputL[inputIndex]; result[index++] = inputR[inputIndex]; inputIndex++; } return result; }
+        function writeFloat32(output, offset, input) { for (let i = 0; i < input.length; i++, offset += 4) { output.setFloat32(offset, input[i], true); } }
+        function floatTo16BitPCM(output, offset, input) { for (let i = 0; i < input.length; i++, offset += 2) { const s = Math.max(-1, Math.min(1, input[i])); output.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true); } }
+
+        function showExportModal() {
+            const modal = document.getElementById('exportModalBackdrop');
+            modal.classList.remove('hidden');
+            setTimeout(() => modal.classList.add('visible'), 10);
+        }
+
+        function hideExportModal() {
+            const modal = document.getElementById('exportModalBackdrop');
+            modal.classList.remove('visible');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        }
+
+        async function exportButtonAction(e) {
+            e.stopPropagation();
+            showExportModal();
+        }
+
+        async function startExport(format) {
+            hideExportModal();
+            const btn = document.getElementById('exportBtn');
+            const originalText = btn.textContent;
+            btn.textContent = '…';
+            btn.disabled = true;
+
+            try {
+                if (isAudioFileLoaded) {
+                    await exportEditedAudio(format);
+                } else {
+                    await exportSynthAudio(format);
+                }
+            } catch(err) {
+                console.error("Export failed", err);
+                alert('An error occurred during export.');
+            } finally {
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        function downloadBlob(blob, filename) {
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = URL.createObjectURL(blob);
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(a.href);
+            document.body.removeChild(a);
+        }
+
+        function audioBufferToMp3(audioBuffer) {
+            if (typeof lamejs === 'undefined') {
+                alert('MP3 encoder not loaded. Please check your internet connection or the lame.min.js file.');
+                throw new Error('lamejs not found');
+            }
+            const numChannels = audioBuffer.numberOfChannels;
+            const sampleRate = audioBuffer.sampleRate;
+            const kbps = 128;
+
+            const mp3encoder = new lamejs.Mp3Encoder(numChannels, sampleRate, kbps);
+            const mp3Data = [];
+
+            const convert = (float_samples) => {
+                const int16_samples = new Int16Array(float_samples.length);
+                for(let i=0; i < float_samples.length; i++){
+                    let s = Math.max(-1, Math.min(1, float_samples[i]));
+                    int16_samples[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+                }
+                return int16_samples;
+            };
+            
+            const samples_l = convert(audioBuffer.getChannelData(0));
+            let samples_r = null;
+            if (numChannels > 1) {
+                samples_r = convert(audioBuffer.getChannelData(1));
+            }
+            
+            const sampleBlockSize = 1152;
+            for (let i = 0; i < samples_l.length; i += sampleBlockSize) {
+                const leftChunk = samples_l.subarray(i, i + sampleBlockSize);
+                let mp3buf;
+                if (numChannels > 1) {
+                    const rightChunk = samples_r.subarray(i, i + sampleBlockSize);
+                    mp3buf = mp3encoder.encodeBuffer(leftChunk, rightChunk);
+                } else {
+                    mp3buf = mp3encoder.encodeBuffer(leftChunk);
+                }
+                if (mp3buf.length > 0) {
+                    mp3Data.push(mp3buf);
+                }
+            }
+
+            const mp3buf = mp3encoder.flush();
+            if (mp3buf.length > 0) {
+                mp3Data.push(mp3buf);
+            }
+
+            return new Blob(mp3Data, { type: 'audio/mp3' });
+        }
+        
+        async function audioBufferToOgg(audioBuffer, metadata) {
+            if (typeof OggVorbisEncoder === 'undefined') {
+                alert('OGG encoder not loaded. The OggVorbisEncoder.min.js file may be missing.');
+                throw new Error('OggVorbisEncoder not found');
+            }
+            const sampleRate = audioBuffer.sampleRate;
+            const numChannels = audioBuffer.numberOfChannels;
+            const quality = 0.6;
+            let comments = [];
+
+            const watermark = document.getElementById('rawStringsOutput').value.trim();
+            if(watermark) {
+                comments.push(`${WATERMARK_KEY}=${watermark}`);
+            }
+
+            if (metadata) {
+                const keyMap = {
+                    title: 'TITLE',
+                    artist: 'ARTIST',
+                    album: 'ALBUM',
+                    albumArtist: 'ALBUMARTIST',
+                    track: 'TRACKNUMBER',
+                    year: 'DATE',
+                    genre: 'GENRE'
+                };
+                for (const key in keyMap) {
+                    if (metadata[key]) {
+                        comments.push(`${keyMap[key]}=${metadata[key]}`);
+                    }
+                }
+            }
+
+            const encoder = new OggVorbisEncoder(sampleRate, numChannels, quality, comments);
+            
+            const channels = [];
+            for (let i = 0; i < numChannels; i++) {
+                channels.push(audioBuffer.getChannelData(i));
+            }
+
+            const bufferSize = 4096;
+            for (let i = 0; i < audioBuffer.length; i += bufferSize) {
+                const chunkedChannels = [];
+                for (let chan = 0; chan < numChannels; chan++) {
+                    chunkedChannels.push(channels[chan].subarray(i, i + bufferSize));
+                }
+                encoder.encode(chunkedChannels);
+            }
+            return encoder.finish('audio/ogg');
+        }
+
+        async function exportSynthAudio(format = 'wav') {
+            const settings = getSettingsFromUI();
+            const totalDuration = settings.audioDuration + settings.releaseTime + 0.05;
+            const sampleRate = 44100;
+            const offlineCtx = new OfflineAudioContext(1, sampleRate * totalDuration, sampleRate);
+            
+            const now = offlineCtx.currentTime;
+            const osc = offlineCtx.createOscillator();
+            const filter = offlineCtx.createBiquadFilter();
+            const gain = offlineCtx.createGain();
+            const finalGain = offlineCtx.createGain();
+            finalGain.gain.value = Math.pow(10, settings.masterVolume / 20);
+            
+            let preEffectNode = gain;
+
+            if (settings.delayMix > 0.0) {
+                const delayNode = offlineCtx.createDelay(1.0);
+                const delayFeedbackNode = offlineCtx.createGain();
+                const wetGain = offlineCtx.createGain();
+                const dryGain = offlineCtx.createGain();
+                const merger = offlineCtx.createGain(); 
+
+                delayNode.delayTime.setValueAtTime(settings.delayTime, now);
+                delayFeedbackNode.gain.setValueAtTime(settings.feedback, now);
+                wetGain.gain.setValueAtTime(settings.delayMix, now);
+                dryGain.gain.setValueAtTime(1.0 - settings.delayMix, now);
+
+                preEffectNode.connect(delayNode); 
+                delayNode.connect(delayFeedbackNode);
+                delayFeedbackNode.connect(delayNode);
+                preEffectNode.connect(dryGain); 
+                delayNode.connect(wetGain);   
+                dryGain.connect(merger);
+                wetGain.connect(merger);
+                preEffectNode = merger; 
+            }
+            
+            const exportDistortion = offlineCtx.createWaveShaper();
+            exportDistortion.curve = makeDistortionCurve(settings.distortionAmount);
+            exportDistortion.oversample = '4x';
+            preEffectNode.connect(exportDistortion);
+            
+            const reverbMix = settings.reverbMix;
+            let lastNode = exportDistortion;
+            if (reverbMix > 0) {
+                const exportReverb = await createReverb(offlineCtx);
+                const exportWetGain = offlineCtx.createGain();
+                const exportDryGain = offlineCtx.createGain();
+                exportWetGain.gain.value = reverbMix;
+                exportDryGain.gain.value = 1 - reverbMix;
+                exportDistortion.connect(exportDryGain);
+                exportDistortion.connect(exportWetGain);
+                exportWetGain.connect(exportReverb);
+                
+                const reverbMerger = offlineCtx.createGain();
+                exportDryGain.connect(reverbMerger);
+                exportReverb.connect(reverbMerger);
+                lastNode = reverbMerger;
+            }
+            
+            lastNode.connect(finalGain);
+            finalGain.connect(offlineCtx.destination);
+            
+            if (settings.lfoDepth > 0.0) {
+                const lfo = offlineCtx.createOscillator();
+                lfo.type = 'sine';
+                lfo.frequency.setValueAtTime(settings.lfoRate, now);
+                const lfoGain = offlineCtx.createGain();
+                lfoGain.gain.setValueAtTime(settings.lfoDepth, now);
+                lfo.connect(lfoGain);
+                lfoGain.connect(osc.frequency);
+                lfo.start(now);
+            }
+
+            osc.type = settings.waveType;
+            filter.type = settings.filterType;
+            osc.connect(filter);
+            filter.connect(gain);
+            filter.frequency.setValueAtTime(settings.filterFreq, now);
+            filter.Q.setValueAtTime(settings.filterQ, now);
+            osc.frequency.setValueAtTime(settings.startFreq, now);
+            osc.frequency.linearRampToValueAtTime(settings.endFreq, now + settings.audioDuration);
+            const envelopeEnd = applyADSR(gain, settings, now, settings.audioDuration);
+            osc.start(now);
+            osc.stop(envelopeEnd + 0.05);
+            
+            const renderedBuffer = await offlineCtx.startRendering();
+            const watermarkText = document.getElementById('rawStringsOutput').value.trim();
+            const metadata = watermarkText ? { watermark: watermarkText } : {};
+
+            if (format === 'wav') {
+                const wav = bufferToWav(renderedBuffer, {}, metadata);
+                const blob = new Blob([wav], { type: 'audio/wav' });
+                downloadBlob(blob, 'synth.wav');
+            } else if (format === 'mp3') {
+                const blob = audioBufferToMp3(renderedBuffer);
+                const taggedBlob = await addID3Tags(blob, metadata);
+                downloadBlob(taggedBlob, 'synth.mp3');
+            } else if (format === 'ogg') {
+                const blob = await audioBufferToOgg(renderedBuffer, metadata);
+                downloadBlob(blob, 'synth.ogg');
+            }
+        }
+        
+        async function addID3Tags(mp3Blob, metadata) {
+            if (typeof ID3Writer === 'undefined') {
+                alert('ID3 tag writer not loaded. Please check your internet connection or the id3-writer.min.js file.');
+                throw new Error('ID3Writer not found');
+            }
+            const songBuffer = await mp3Blob.arrayBuffer();
+            const writer = new ID3Writer(songBuffer);
+
+            if(metadata.title) writer.setFrame('TIT2', metadata.title);
+            if(metadata.artist) writer.setFrame('TPE1', [metadata.artist]);
+            if(metadata.album) writer.setFrame('TALB', metadata.album);
+            if(metadata.albumArtist) writer.setFrame('TPE2', metadata.albumArtist);
+            if(metadata.year) writer.setFrame('TYER', metadata.year);
+            if(metadata.track) writer.setFrame('TRCK', metadata.track);
+            if(metadata.genre) writer.setFrame('TCON', [metadata.genre]);
+            
+            const watermark = document.getElementById('rawStringsOutput').value.trim();
+            if(watermark){
+                 writer.setFrame('COMM', {
+                    description: WATERMARK_KEY,
+                    text: watermark
+                });
+            }
+
+            const coverArtImg = document.getElementById('coverArt');
+            if (coverArtImg.src && !coverArtImg.src.startsWith('data:image/gif')) {
+                try {
+                    const response = await fetch(coverArtImg.src);
+                    const imageBuffer = await response.arrayBuffer();
+                    writer.setFrame('APIC', {
+                        type: 3,
+                        data: imageBuffer,
+                        description: 'Cover'
+                    });
+                } catch(e) {
+                    console.error("Could not fetch cover art for tagging:", e);
+                }
+            }
+
+            writer.addTag();
+            return writer.getBlob();
+        }
+
+        async function exportEditedAudio(format = 'wav') {
+             if (!audioFileBuffer) {
+                alert("No audio file loaded to export.");
+                return;
+            }
+
+            const offlineCtx = new OfflineAudioContext(audioFileBuffer.numberOfChannels, audioFileBuffer.length, audioFileBuffer.sampleRate);
+            const source = offlineCtx.createBufferSource();
+            source.buffer = audioFileBuffer;
+            source.playbackRate.value = parseFloat(document.getElementById('playbackRate').value);
+
+            const finalGain = offlineCtx.createGain();
+            finalGain.gain.value = Math.pow(10, parseFloat(document.getElementById('editorVolume').value) / 20);
+
+            let lastNode = source;
+
+            const frequencies = [60, 170, 310, 600, 1000, 3000, 6000, 12000, 14000];
+            const eqSliders = document.querySelectorAll('#equalizerContainer input');
+            frequencies.forEach((freq, i) => {
+                const eqNode = offlineCtx.createBiquadFilter();
+                if (i === 0) eqNode.type = 'lowshelf';
+                else if (i === frequencies.length - 1) eqNode.type = 'highshelf';
+                else eqNode.type = 'peaking';
+                
+                eqNode.frequency.value = freq;
+                eqNode.gain.value = parseFloat(eqSliders[i].value);
+                lastNode.connect(eqNode);
+                lastNode = eqNode;
+            });
+
+            const exportDistortion = offlineCtx.createWaveShaper();
+            exportDistortion.curve = makeDistortionCurve(parseFloat(document.getElementById('editorDistortion').value));
+            exportDistortion.oversample = '4x';
+            lastNode.connect(exportDistortion);
+            lastNode = exportDistortion;
+            
+            const reverbMix = parseFloat(document.getElementById('editorReverb').value);
+            if (reverbMix > 0) {
+                const exportReverb = await createReverb(offlineCtx);
+                const exportWetGain = offlineCtx.createGain();
+                const exportDryGain = offlineCtx.createGain();
+                exportWetGain.gain.value = reverbMix;
+                exportDryGain.gain.value = 1 - reverbMix;
+                lastNode.connect(exportDryGain);
+                lastNode.connect(exportWetGain);
+                exportWetGain.connect(exportReverb);
+                
+                const reverbMerger = offlineCtx.createGain();
+                exportDryGain.connect(reverbMerger);
+                exportReverb.connect(reverbMerger);
+                lastNode = reverbMerger;
+            }
+            
+            lastNode.connect(finalGain);
+            finalGain.connect(offlineCtx.destination);
+            source.start(0);
+
+            const renderedBuffer = await offlineCtx.startRendering();
+            
+            const metadata = {
+                title: document.getElementById('metaTitle').value,
+                artist: document.getElementById('metaArtist').value,
+                album: document.getElementById('metaAlbum').value,
+                albumArtist: document.getElementById('metaAlbumArtist').value,
+                year: document.getElementById('metaYear').value,
+                track: document.getElementById('metaTrack').value,
+                genre: document.getElementById('metaGenre').value
+            };
+            const newTitle = metadata.title || 'edited_audio';
+
+            if (format === 'wav') {
+                metadata.watermark = document.getElementById('rawStringsOutput').value.trim();
+                const wav = bufferToWav(renderedBuffer, {}, metadata);
+                const blob = new Blob([wav], { type: 'audio/wav' });
+                downloadBlob(blob, `${newTitle}.wav`);
+            } else if (format === 'mp3') {
+                const mp3Blob = audioBufferToMp3(renderedBuffer);
+                const taggedMp3Blob = await addID3Tags(mp3Blob, metadata);
+                downloadBlob(taggedMp3Blob, `${newTitle}.mp3`);
+            } else if (format === 'ogg') {
+                const oggBlob = await audioBufferToOgg(renderedBuffer, metadata);
+                downloadBlob(oggBlob, `${newTitle}.ogg`);
+            }
+        }
+
+        function drawBars(canvasCtx, dataArray, W, H, color) { const bufferLength = dataArray.length; const barWidth = (W / bufferLength) * 2.5; let x = 0; for (let i = 0; i < bufferLength; i++) { const barHeight = (dataArray[i] / 255) * H; canvasCtx.fillStyle = color; canvasCtx.fillRect(x, H - barHeight, barWidth, barHeight); x += barWidth + 1; } }
+        function drawLine(canvasCtx, dataArray, W, H, color) { const bufferLength = dataArray.length; canvasCtx.lineWidth = 2; canvasCtx.strokeStyle = color; canvasCtx.beginPath(); const sliceWidth = W * 1.0 / bufferLength; let x = 0; for (let i = 0; i < bufferLength; i++) { const v = dataArray[i] / 128.0; const y = v * H / 2; if (i === 0) { canvasCtx.moveTo(x, y); } else { canvasCtx.lineTo(x, y); } x += sliceWidth; } canvasCtx.lineTo(W, H / 2); canvasCtx.stroke(); }
+        function drawCircle(canvasCtx, dataArray, W, H, color) { const bufferLength = dataArray.length; const centerX = W / 2; const centerY = H / 2; const radius = Math.min(W, H) / 3.5; canvasCtx.lineWidth = 2; canvasCtx.strokeStyle = color; canvasCtx.beginPath(); for (let i = 0; i < bufferLength; i++) { const angle = (i / bufferLength) * 2 * Math.PI; const barHeight = (dataArray[i] / 255) * radius * 0.8; const x = centerX + Math.cos(angle) * (radius + barHeight); const y = centerY + Math.sin(angle) * (radius + barHeight); if (i === 0) { canvasCtx.moveTo(x, y); } else { canvasCtx.lineTo(x, y); } } canvasCtx.closePath(); canvasCtx.stroke(); }
+        function drawWave(canvasCtx, dataArray, W, H, color) { const bufferLength = dataArray.length; canvasCtx.lineWidth = 2; canvasCtx.strokeStyle = color; canvasCtx.beginPath(); const sliceWidth = W * 1.0 / bufferLength; let x = 0; for (let i = 0; i < bufferLength; i++) { const v = 1 - (dataArray[i] / 255.0); const y = v * H; if (i === 0) { canvasCtx.moveTo(x, y); } else { canvasCtx.lineTo(x, y); } x += sliceWidth; } canvasCtx.lineTo(W, H/2); canvasCtx.stroke(); }
+        function drawRings(canvasCtx, dataArray, W, H, color) { const centerX = W / 2; const centerY = H / 2; const bufferLength = dataArray.length; const maxRadius = Math.min(W, H) / .5; let energy = 0; for (let i = 0; i < bufferLength; i++) { energy += dataArray[i]; } energy = energy / bufferLength / 255.0; for (let i = 1; i <= 3; i++) { canvasCtx.beginPath(); const radius = (maxRadius * energy) * (i / 3); let r=0, g=0, b=0; if (color.startsWith('#') && color.length >= 7) { r = parseInt(color.slice(1, 3), 16); g = parseInt(color.slice(3, 5), 16); b = parseInt(color.slice(5, 7), 16); } canvasCtx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${1 - (i / 4)})`; canvasCtx.lineWidth = 1 + (4-i); canvasCtx.arc(centerX, centerY, radius, 0, 2 * Math.PI); canvasCtx.stroke(); } }
+
+        function visualize() {
+            if (!analyser) return;
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+            
+            const canvas = document.getElementById('visualizer');
+            const canvasCtx = canvas.getContext('2d');
+            const style = getComputedStyle(document.body);
+            const bgColor = style.getPropertyValue('--code-bg-color');
+            const textColor = style.getPropertyValue('--text-color');
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+            analyser.fftSize = 2048;
+            
+            const dataArrays = {
+                frequency: new Uint8Array(analyser.frequencyBinCount),
+                time: new Uint8Array(analyser.fftSize)
+            };
+            
+            const draw = () => {
+                if (!currentSound && !audioFileSource) {
+                    if (animationFrameId) cancelAnimationFrame(animationFrameId);
+                    animationFrameId = null;
+                    drawBlankVisualizer();
+                    return;
+                }
+                animationFrameId = requestAnimationFrame(draw);
+                const visualizerType = VISUALIZER_TYPES[currentVisualizerIndex];
+                
+                canvasCtx.fillStyle = bgColor;
+                canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                if (isAudioFileLoaded && audioFileSource) {
+                    const progress = ( (audioContext.currentTime - playbackStartTime + playbackStartOffset) % audioFileBuffer.duration) / audioFileBuffer.duration;
+                    document.getElementById('progressBar').style.width = `${progress * 100}%`;
+                }
+                
+                switch (visualizerType) {
+                    case 'line':
+                        analyser.getByteTimeDomainData(dataArrays.time);
+                        drawLine(canvasCtx, dataArrays.time, canvas.width, canvas.height, textColor);
+                        break;
+                    case 'circle':
+                        analyser.getByteFrequencyData(dataArrays.frequency);
+                        drawCircle(canvasCtx, dataArrays.frequency, canvas.width, canvas.height, textColor);
+                        break;
+                    case 'wave':
+                        analyser.getByteFrequencyData(dataArrays.frequency);
+                        drawWave(canvasCtx, dataArrays.frequency, canvas.width, canvas.height, textColor);
+                        break;
+                    case 'rings':
+                        analyser.getByteFrequencyData(dataArrays.frequency);
+                        drawRings(canvasCtx, dataArrays.frequency, canvas.width, canvas.height, textColor);
+                        break;
+                    default:
+                        analyser.getByteFrequencyData(dataArrays.frequency);
+                        drawBars(canvasCtx, dataArrays.frequency, canvas.width, canvas.height, textColor);
+                        break;
+                }
+            };
+            draw();
+        }
+
+        function generateCode() {
+            const s = getSettingsFromUI();
+            const code = `
+function createCustomTone(audioContext) {
+    const now = audioContext.currentTime;
+    const osc = audioContext.createOscillator();
+    const filter = audioContext.createBiquadFilter();
+    const gain = audioContext.createGain();
+    osc.type = '${s.waveType}';
+    filter.type = '${s.filterType}';
+    filter.frequency.setValueAtTime(${s.filterFreq.toFixed(3)}, now);
+    filter.Q.setValueAtTime(${s.filterQ.toFixed(3)}, now);
+    osc.frequency.setValueAtTime(${s.startFreq.toFixed(3)}, now);
+    osc.frequency.linearRampToValueAtTime(${s.endFreq.toFixed(3)}, now + ${s.audioDuration.toFixed(3)});
+    gain.gain.setValueAtTime(0.0, now);
+    gain.gain.linearRampToValueAtTime(0.5, now + ${s.attackTime.toFixed(3)});
+    gain.gain.linearRampToValueAtTime(${s.sustainLevel.toFixed(3)}, now + ${s.attackTime.toFixed(3)} + ${s.decayTime.toFixed(3)});
+    const releaseStart = now + ${s.audioDuration.toFixed(3)};
+    const totalDuration = releaseStart + ${s.releaseTime.toFixed(3)};
+    gain.gain.setValueAtTime(${s.sustainLevel.toFixed(3)}, releaseStart); 
+    gain.gain.linearRampToValueAtTime(0.0001, totalDuration);
+    
+    let preEffectNode = gain;
+    osc.connect(filter);
+    filter.connect(gain);
+    preEffectNode.connect(audioContext.destination);
+
+    osc.start(now);
+    osc.stop(totalDuration + 0.05);
+    return osc;
+}`.trim();
+            document.getElementById('codeOutput').value = code;
+        }
+
+        function copyCode(e) { e.stopPropagation(); const codeOutput = document.getElementById('codeOutput'); codeOutput.select(); document.execCommand('copy'); const btn = e.target.closest('button'); const originalText = btn.textContent; btn.textContent = '☻'; setTimeout(() => { btn.textContent = originalText; }, 1000); }
+        function editCode(e) { e.stopPropagation(); const codeOutput = document.getElementById('codeOutput'); const editBtn = document.getElementById('editBtn'); if (codeOutput.readOnly) { codeOutput.readOnly = false; editBtn.textContent = '⎗'; } else { const settings = parseCode(codeOutput.value); if (settings) { loadSettings(settings); generateCode(); editBtn.textContent = '⌨'; codeOutput.readOnly = true; alert('Settings loaded from script!'); } else { alert('Could not parse settings from script. Ensure all variables are present.'); } } }
+        function parseCode(code) { const settings = {}; const regex = /const ([A-Z_]+) = (.+);/g; let match; while ((match = regex.exec(code)) !== null) { const name = match[1].toLowerCase().replace(/_(\w)/g, (m, c) => c.toUpperCase()); let value = match[2].trim().replace(/[';]/g, ''); if (!isNaN(parseFloat(value))) { value = parseFloat(value); } settings[name] = value; } return (Object.keys(settings).length >= 15) ? settings : null; }
+        function toggleTheme() { const btn = document.getElementById('themeToggleBtn'); btn.classList.add('animate-spin-out'); setTimeout(() => { currentThemeIndex = (currentThemeIndex + 1) % THEMES.length; const newTheme = THEMES[currentThemeIndex]; document.body.className = ''; if (newTheme !== 'default') { document.body.classList.add(newTheme); } localStorage.setItem('synthTheme', newTheme); drawBlankVisualizer(); btn.classList.remove('animate-spin-out'); btn.classList.add('animate-spin-in'); setTimeout(() => btn.classList.remove('animate-spin-in'), 500); }, 500); }
+        function toggleButtonSide(targetDirection) { const container = document.getElementById('sideButtons'); const currentSide = container.classList.contains('right') ? 'right' : 'left'; if (targetDirection === currentSide) return; const buttons = container.querySelectorAll('.action-btn'); buttons.forEach(btn => btn.classList.add('animate-spin-out')); setTimeout(() => { container.classList.remove('right', 'left'); container.classList.add(targetDirection); localStorage.setItem('synthButtonSide', targetDirection); buttons.forEach(btn => { btn.classList.remove('animate-spin-out'); btn.classList.add('animate-spin-in'); }); setTimeout(() => buttons.forEach(btn => btn.classList.remove('animate-spin-in')), 500); }, 500); }
+        function resetButtonAction(e) { e.stopPropagation(); if (isAudioFileLoaded) { if (confirm('Reset all audio adjustments?')) { document.querySelectorAll('#equalizerContainer input').forEach(s => s.value = 0); eqBands.forEach(b => b.gain.value = 0); document.getElementById('playbackRate').value = 1; document.getElementById('playbackRateInput').value = 1; if(audioFileSource) audioFileSource.playbackRate.value = 1; } } else { if (confirm('Are you sure you want to reset all synthesizer settings to default?')) { localStorage.removeItem('synthSettings'); loadSettings(DEFAULTS); generateCode(); stopCurrentSound(); loopMode = 0; updateLoopButton(); } } }
+
+        function loadSettings(customSettings) {
+            let settings;
+            if (customSettings) {
+                settings = customSettings;
+            } else {
+                try {
+                    const savedSettings = localStorage.getItem('synthSettings');
+                    settings = savedSettings ? JSON.parse(savedSettings) : DEFAULTS;
+                } catch {
+                    settings = DEFAULTS;
+                }
+            }
+            Object.keys(DEFAULTS).forEach(key => {
+                const value = settings[key] !== undefined ? settings[key] : DEFAULTS[key];
+                const el = document.getElementById(key);
+                const inputEl = document.getElementById(key + 'Input');
+                if(el) el.value = value;
+                if(inputEl) inputEl.value = value;
+            });
+        }
+        function saveSettings() { localStorage.setItem('synthSettings', JSON.stringify(getSettingsFromUI())); }
+        
+        function loadAudioFile(file) {
+            initContext();
+            stopCurrentSound();
+            loadedFileInfo.name = file.name;
+            loadedFileInfo.size = file.size;
+            loadedFileInfo.type = file.type;
+
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                try {
+                    audioContext.decodeAudioData(e.target.result.slice(0)).then(buffer => {
+                        audioFileBuffer = buffer;
+                        originalAudioFileBuffer = buffer;
+                        isReversed = false;
+                        loadedFileInfo.duration = buffer.duration;
+                        loadedFileInfo.bitrate = Math.round((loadedFileInfo.size * 8) / loadedFileInfo.duration / 1000);
+                        loadedFileInfo.channels = buffer.numberOfChannels;
+                        loadedFileInfo.sampleRate = buffer.sampleRate;
+                        updateFileInfoDisplay(loadedFileInfo);
+                        toggleAudioEditorMode(true, file.type);
+                        parseMetadata(file);
+                    }).catch(err => {
+                         alert("Could not decode audio file. It might be corrupt or an unsupported format.");
+                         console.error(err);
+                    });
+                } catch (err) {
+                    alert("Error reading file.");
+                    console.error(err);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function updateFileInfoDisplay(info) {
+            const container = document.getElementById('audioFileInfoContainer');
+            const oggContainer = document.getElementById('oggInfoContainer');
+
+            if (!info || !info.duration) {
+                container.innerHTML = '';
+                oggContainer.innerHTML = '';
+                return;
+            }
+            
+            const infoHtml = `
+                <b>File:</b> ${info.name}<br>
+                <b>Duration:</b> ${info.duration.toFixed(2)}s | <b>Size:</b> ${(info.size / 1024 / 1024).toFixed(2)} MB<br>
+                <b>Bitrate:</b> ~${info.bitrate} kbps | <b>Sample Rate:</b> ${info.sampleRate} Hz<br>
+                <b>Channels:</b> ${info.channels === 1 ? 'Mono' : info.channels === 2 ? 'Stereo' : info.channels}
+            `;
+
+            container.innerHTML = infoHtml;
+            oggContainer.innerHTML = infoHtml;
+        }
+        
+        function toggleAudioEditorMode(isLoaded, fileType = '') {
+            isAudioFileLoaded = isLoaded;
+            document.getElementById('synthControls').classList.toggle('hidden', isLoaded);
+            document.getElementById('audioEditorContainer').classList.toggle('hidden', !isLoaded);
+            document.querySelectorAll('#ejectBtn').forEach(b => b.classList.toggle('hidden', !isLoaded));
+            document.getElementById('codeOutputContainer').classList.toggle('hidden', isLoaded);
+            
+            const isOgg = fileType.includes('ogg');
+            const isWav = fileType.includes('wav');
+            
+            document.getElementById('metadataContainer').classList.toggle('hidden', isOgg);
+            document.getElementById('oggInfoContainer').classList.toggle('hidden', !isOgg);
+            document.getElementById('coverArt').classList.toggle('disabled', isWav);
+
+            loopMode = 0;
+            updateLoopButton();
+            document.querySelectorAll('#playBtn').forEach(btn => btn.textContent = isLoaded ? 'PLAY' : 'SOUND');
+            document.getElementById('globalTitle').textContent = isLoaded ? "./EDITOR." : "./SYNTH.";
+            document.getElementById('progressBar').style.width = '0%';
+            
+            if (!isLoaded) {
+                isReversed = false;
+                document.getElementById('reverseBtn').classList.remove('active');
+                document.getElementById('editorDistortion').value = 0;
+                document.getElementById('editorDistortionInput').value = 0;
+                document.getElementById('editorReverb').value = 0;
+                document.getElementById('editorReverbInput').value = 0;
+                updateFileInfoDisplay();
+            }
+        }
+        
+        async function playAudioFile(offset = 0) {
+            if (!audioFileBuffer) return;
+            stopCurrentSound();
+            await initContext();
+
+            audioFileSource = audioContext.createBufferSource();
+            audioFileSource.buffer = audioFileBuffer;
+            audioFileSource.loop = loopMode > 0;
+            audioFileSource.playbackRate.value = parseFloat(document.getElementById('playbackRate').value);
+            
+            distortionNode = audioContext.createWaveShaper();
+            distortionNode.curve = makeDistortionCurve(parseFloat(document.getElementById('editorDistortion').value));
+            distortionNode.oversample = '4x';
+
+            wetGainNode = audioContext.createGain();
+            dryGainNode = audioContext.createGain();
+            const reverbMix = parseFloat(document.getElementById('editorReverb').value);
+            wetGainNode.gain.setValueAtTime(reverbMix, audioContext.currentTime);
+            dryGainNode.gain.setValueAtTime(1 - reverbMix, audioContext.currentTime);
+            
+            let lastNode = audioFileSource;
+            const frequencies = [60, 170, 310, 600, 1000, 3000, 6000, 12000, 14000];
+            const eqSliders = document.querySelectorAll('#equalizerContainer input');
+            eqBands = [];
+            
+            frequencies.forEach((freq, i) => {
+                const eq = audioContext.createBiquadFilter();
+                if (i === 0) eq.type = 'lowshelf';
+                else if (i === frequencies.length - 1) eq.type = 'highshelf';
+                else eq.type = 'peaking';
+                
+                eq.frequency.value = freq;
+                eq.gain.value = parseFloat(eqSliders[i].value);
+                
+                lastNode.connect(eq);
+                lastNode = eq;
+                eqBands.push(eq);
+            });
+            
+            lastNode.connect(distortionNode);
+            distortionNode.connect(dryGainNode);
+            distortionNode.connect(wetGainNode);
+            wetGainNode.connect(convolverNode);
+            dryGainNode.connect(analyser);
+            convolverNode.connect(analyser);
+
+            playbackStartOffset = offset;
+            playbackStartTime = audioContext.currentTime;
+            
+            audioFileSource.start(0, offset);
+            
+            audioFileSource.onended = () => {
+                if (!audioFileSource.loop) {
+                    stopCurrentSound();
+                    document.querySelectorAll('#playBtn').forEach(btn => btn.textContent = 'PLAY');
+                    playbackStartOffset = 0;
+                    document.getElementById('progressBar').style.width = '0%';
+                }
+            };
+
+            isPlaying = true;
+            document.getElementById('reverseBtn').disabled = true;
+            visualize();
+        }
+        
+        function toggleAudioPlayback() {
+            if (isPlaying) {
+                playbackStartOffset += audioContext.currentTime - playbackStartTime;
+                stopCurrentSound();
+                document.querySelectorAll('#playBtn').forEach(btn => btn.textContent = 'PLAY');
+            } else {
+                playAudioFile(playbackStartOffset % audioFileBuffer.duration);
+                document.querySelectorAll('#playBtn').forEach(btn => btn.textContent = 'PAUSE');
+            }
+        }
+        
+        function ejectAudio() {
+            stopCurrentSound();
+            audioFileBuffer = null;
+            originalAudioFileBuffer = null;
+            loadedFileInfo = {};
+            toggleAudioEditorMode(false);
+            resetMetadata();
+            drawBlankVisualizer();
+        }
+
+        function seekAudio(e) {
+            if (!audioFileBuffer) return;
+            const progressBar = document.getElementById('progressBarContainer');
+            const rect = progressBar.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const progress = clickX / rect.width;
+            const seekTime = audioFileBuffer.duration * progress;
+            
+            playbackStartOffset = seekTime;
+            if (isPlaying) {
+                playAudioFile(seekTime);
+            } else {
+                 document.getElementById('progressBar').style.width = `${progress * 100}%`;
+            }
+        }
+        
+        async function parseMetadata(file) {
+            resetMetadata();
+            window.jsmediatags.read(file, {
+                onSuccess: function(tag) {
+                    const tags = tag.tags;
+                    
+                    document.getElementById('metaTitle').value = tags.title || '';
+                    document.getElementById('metaArtist').value = tags.artist || '';
+                    document.getElementById('metaAlbum').value = tags.album || '';
+                    document.getElementById('metaYear').value = tags.year || '';
+                    document.getElementById('metaTrack').value = tags.track || '';
+                    document.getElementById('metaGenre').value = tags.genre || '';
+                    document.getElementById('metaAlbumArtist').value = tags.TPE2 || '';
+
+                    if (tags.picture) {
+                        const { data, format } = tags.picture;
+                        let base64String = "";
+                        for (let i = 0; i < data.length; i++) {
+                            base64String += String.fromCharCode(data[i]);
+                        }
+                        document.getElementById('coverArt').src = `data:${format};base64,${window.btoa(base64String)}`;
+                    }
+
+                    // Check for our custom watermark
+                    if (tags.comment && tags.comment.description === WATERMARK_KEY) {
+                         document.getElementById('rawStringsOutput').value = tags.comment.text;
+                    }
+                },
+                onError: function(error) {
+                    console.log('JSMediaTags could not read metadata:', error.type, error.info);
+                }
+            });
+        }
+
+        function resetMetadata() {
+            document.getElementById('metaTitle').value = '';
+            document.getElementById('metaArtist').value = '';
+            document.getElementById('metaAlbum').value = '';
+            document.getElementById('metaYear').value = '';
+            document.getElementById('metaTrack').value = '';
+            document.getElementById('metaGenre').value = '';
+            document.getElementById('metaAlbumArtist').value = '';
+            document.getElementById('coverArt').src = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
+            document.getElementById('rawStringsOutput').value = '';
+        }
+        
+        function reverseAudio() {
+            if(!originalAudioFileBuffer || isPlaying) return;
+            
+            isReversed = !isReversed;
+            const btn = document.getElementById('reverseBtn');
+            btn.classList.toggle('active', isReversed);
+            btn.textContent = "Processing...";
+            btn.disabled = true;
+
+            setTimeout(() => {
+                if (isReversed) {
+                    const newBuffer = audioContext.createBuffer(
+                        originalAudioFileBuffer.numberOfChannels,
+                        originalAudioFileBuffer.length,
+                        originalAudioFileBuffer.sampleRate
+                    );
+                    for (let i = 0; i < originalAudioFileBuffer.numberOfChannels; i++) {
+                        const channelData = new Float32Array(originalAudioFileBuffer.getChannelData(i));
+                        newBuffer.copyToChannel(channelData.reverse(), i);
+                    }
+                    audioFileBuffer = newBuffer;
+                } else {
+                    audioFileBuffer = originalAudioFileBuffer;
+                }
+                btn.textContent = "Reverse Audio";
+                btn.disabled = false;
+            }, 10);
+        }
+
+        function copyRawStrings(e) {
+            e.stopPropagation();
+            const rawStringsOutput = document.getElementById('rawStringsOutput');
+            rawStringsOutput.select();
+            document.execCommand('copy');
+            const btn = e.target.closest('button');
+            const originalText = btn.textContent;
+            btn.textContent = '☻';
+            setTimeout(() => { btn.textContent = originalText; }, 1000);
+        }
+
+        function handleKeyboardShortcuts(event) {
+            if (document.activeElement.tagName.toLowerCase() === 'input' || document.activeElement.tagName.toLowerCase() === 'textarea') {
+                return;
+            }
+            
+            if (event.code === 'Space') {
+                event.preventDefault();
+                if (isAudioFileLoaded) {
+                    toggleAudioPlayback();
+                } else {
+                    if (loopMode === 0) playCustomSound();
+                }
+            }
+            
+            if (isAudioFileLoaded && (event.code === 'ArrowLeft' || event.code === 'ArrowRight')) {
+                event.preventDefault();
+                if (!audioFileBuffer) return;
+                const seekAmount = event.code === 'ArrowLeft' ? -5 : 5;
+                const newTime = Math.max(0, Math.min(audioFileBuffer.duration, playbackStartOffset + seekAmount));
+                
+                document.getElementById('progressBar').style.width = `${(newTime / audioFileBuffer.duration) * 100}%`;
+                
+                if (isPlaying) {
+                    playAudioFile(newTime);
+                } else {
+                    playbackStartOffset = newTime;
+                }
+            }
+        }
+    </script>
+</body>
+</html>
