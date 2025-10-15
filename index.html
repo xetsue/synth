@@ -390,17 +390,8 @@
         }
         #metadataContainer input { width: 100%; font-family: Monospace,monospace; background-color: inherit;}
         #coverArt { width: 100px; height: 100px; object-fit: cover; background-color: var(--code-bg-color); border: 1px solid var(--border-color); cursor: pointer; }
-        #coverArt.disabled { filter: grayscale(1); cursor: not-allowed; pointer-events: none; }
         .metadata-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         
-        #oggInfoContainer {
-            padding: 10px;
-            background-color: var(--code-bg-color);
-            border: 1px solid var(--border-color);
-            font-size: 0.9em;
-            line-height: 1.6;
-        }
-
         #reverseBtn {
             width: 100%; 
             margin: 10px 0; 
@@ -422,7 +413,7 @@
             cursor: not-allowed;
         }
 
-        #codeOutputContainer, #rawStringsContainer {
+        #codeOutputContainer {
             background-color: var(--code-bg-color);
             border: 2px solid var(--border-color);
             padding: 15px;
@@ -434,7 +425,7 @@
             transition: all 0.3s ease-in-out;
         }
 
-        #codeHeader, #rawStringsHeader {
+        #codeHeader {
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -445,14 +436,14 @@
             padding-bottom: 10px;
         }
 
-        #codeHeader div, #rawStringsHeader div {
+        #codeHeader div {
             display: flex;
             gap: 10px;
             height: 100%;
             align-items: center;
         }
 
-        #codeOutput, #rawStringsOutput {
+        #codeOutput {
             width: 100%;
             height: 250px;
             border: none;
@@ -571,35 +562,45 @@
             pointer-events: auto;
         }
 
+        .glass-panel {
+            background-color: rgba(255, 255, 255, 0.15);
+            border: 1.5px solid rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            transition: all 0.3s ease-in-out;
+        }
+        body.light-theme .glass-panel {
+            background-color: rgba(255, 255, 255, 0.6);
+            border: 1.5px solid rgba(0, 0, 0, 0.3);
+        }
+        .retro-light-theme .glass-panel, 
+        .retro-dark-theme .glass-panel {
+            backdrop-filter: none; -webkit-backdrop-filter: none;
+            background-color: var(--bg-color);
+            border: 2px outset var(--border-color);
+            box-shadow: none;
+            border-radius: 0;
+        }
+
         #codeModalPanel {
             position: relative;
             width: 90%;
             max-width: 650px;
             max-height: 80vh;
             overflow: hidden;
-            border-radius: 8px;
             padding: 15px;
             box-sizing: border-box;
-            background-color: rgba(255, 255, 255, 0.15);
-            border: 1.5px solid rgba(255, 255, 255, 0.4);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
             color: var(--text-color);
-            transition: all 0.3s ease-in-out;
             transform: scale(0.95);
             display: flex;
             flex-direction: column;
         }
 
-        body.light-theme #codeModalPanel {
-            background-color: rgba(255, 255, 255, 0.6);
-            border: 1.5px solid rgba(0, 0, 0, 0.3);
-        }
-
         #codeModalBackdrop.visible #codeModalPanel { transform: scale(1); }
-        #codeModalPanel #codeOutputContainer, #codeModalPanel #rawStringsContainer { margin-top: 0 !important; padding: 0 !important; border: none !important; background-color: transparent !important; max-height: 100%; }
-        #codeModalPanel #codeOutput, #codeModalPanel #rawStringsOutput { height: calc(80vh - 100px); resize: none !important; overflow: auto; }
+        #codeModalPanel #codeOutputContainer { margin-top: 0 !important; padding: 0 !important; border: none !important; background-color: transparent !important; max-height: 100%; }
+        #codeModalPanel #codeOutput { height: calc(80vh - 100px); resize: none !important; overflow: auto; }
         .retro-light-theme *, .retro-dark-theme * { transition: none !important; }
         .retro-light-theme button, .retro-dark-theme button, .retro-light-theme .code-action-btn, .retro-dark-theme .code-action-btn { border-radius: 0; border-style: outset; border-width: 2px; filter: none !important; }
         .retro-light-theme .side-buttons-container .action-btn, .retro-dark-theme .side-buttons-container .action-btn { border-radius: 0; border-style: outset; }
@@ -614,7 +615,6 @@
 		.retro-dark-theme .controls-container { border-radius: 0; border-style: outset; border-width: 2.5px; border-color: var(--border-color);}
         .retro-light-theme #visualizer, .retro-dark-theme #visualizer { border: 1px solid var(--border-color); }
         .retro-light-theme input[type="text"], .retro-dark-theme input[type="text"], .retro-light-theme input[type="number"], .retro-dark-theme input[type="number"], .retro-light-theme select, .retro-dark-theme select { border-radius: 0; border-style: inset; border-width: 2px; background-color: var(--code-bg-color); }
-        .retro-light-theme #codeModalPanel, .retro-dark-theme #codeModalPanel { border-radius: 0; backdrop-filter: none; -webkit-backdrop-filter: none; background-color: var(--bg-color); border: 2px outset var(--border-color); box-shadow: none; }
         .retro-light-theme { --border-3d-light: #ffffff; --border-3d-dark: #808080; }
         .retro-dark-theme { --border-3d-light: #555555; --border-3d-dark: #111111; }
         .retro-light-theme .controls-container, .retro-dark-theme .controls-container, .retro-light-theme select, .retro-dark-theme select, .retro-light-theme .value-input, .retro-dark-theme .value-input { border-color: var(--border-3d-dark) var(--border-3d-light) var(--border-3d-light) var(--border-3d-dark); }
@@ -622,7 +622,7 @@
         .retro-light-theme button:active, .retro-dark-theme button:active, .retro-light-theme #loopBtn.active, .retro-dark-theme #loopBtn.active { border-color: var(--border-3d-dark) var(--border-3d-light) var(--border-3d-light) var(--border-3d-dark); }
         #mobile-fixed-buttons { display: none; }
 
-        #exportModalBackdrop {
+        #exportModalBackdrop, #resetModalBackdrop {
             display: none;
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -634,27 +634,23 @@
             transition: opacity 0.3s;
             pointer-events: none;
         }
-        #exportModalBackdrop.visible {
+        #exportModalBackdrop.visible, #resetModalBackdrop.visible {
             display: flex;
             opacity: 1;
             pointer-events: auto;
         }
-        #exportModalPanel {
-            background-color: var(--bg-color);
-            border: 1.7px solid var(--border-color);
+        #exportModalPanel, #resetModalPanel {
             padding: 25px;
-            border-radius: 8px;
             width: 90%;
             max-width: 400px;
             text-align: center;
-            box-shadow: 0 4px 30px rgba(0,0,0,0.3);
             transform: scale(0.95);
-            transition: transform 0.3s;
         }
-        #exportModalBackdrop.visible #exportModalPanel {
+        #exportModalBackdrop.visible #exportModalPanel,
+        #resetModalBackdrop.visible #resetModalPanel {
             transform: scale(1);
         }
-        #exportModalPanel h3 {
+        #exportModalPanel h3, #resetModalPanel h3 {
             margin-top: 0;
             margin-bottom: 20px;
         }
@@ -691,19 +687,23 @@
         #closeExportModalBtn:active {
             background-color: var(--code-bg-color);
         }
-        .retro-light-theme #exportModalPanel, .retro-dark-theme #exportModalPanel {
+        .retro-light-theme #exportModalPanel button, .retro-dark-theme #exportModalPanel button,
+        .retro-light-theme #resetModalPanel button, .retro-dark-theme #resetModalPanel button {
             border-radius: 0;
             border-style: outset;
             border-width: 2px;
         }
-        .retro-light-theme #exportModalPanel button, .retro-dark-theme #exportModalPanel button {
-            border-radius: 0;
-            border-style: outset;
-            border-width: 2px;
-        }
-        .retro-light-theme #exportModalPanel button:active, .retro-dark-theme #exportModalPanel button:active {
+        .retro-light-theme #exportModalPanel button:active, .retro-dark-theme #exportModalPanel button:active,
+        .retro-light-theme #resetModalPanel button:active, .retro-dark-theme #resetModalPanel button:active {
             border-style: inset;
         }
+        .export-note {
+            font-size: 0.8em;
+            color: #888;
+            margin-top: 20px;
+            margin-bottom: 0px;
+        }
+
 
         @media (min-width: 769px) {
             body { 
@@ -771,22 +771,30 @@
                 grid-template-columns: 1fr 1fr;
                 gap: 15px 20px;
             }
-            #codeOutputContainer, #rawStringsContainer {
+            #codeOutputContainer {
                 margin-top: 30px;
                 height: auto;
                 border-top: 2px solid var(--border-color);
                 border-left: none; border-right: none; border-bottom: none;
             }
-            #scrollableControls #codeOutput, #scrollableControls #rawStringsOutput {
+            #scrollableControls #codeOutput {
                 display: block;
             }
-            #codeHeader, #rawStringsHeader { 
+            #codeHeader { 
                 padding-bottom: 10px; 
             }
             #stickyActions {
                 flex-shrink: 0;
                 padding: 20px;
                 border-top: 2px solid var(--border-color);
+            }
+            body:not(.retro-light-theme):not(.retro-dark-theme) #stickyActions {
+                background-color: rgba(255, 255, 255, 0.15);
+                backdrop-filter: blur(10px);
+                -webkit-backdrop-filter: blur(10px);
+            }
+            body.light-theme:not(.retro-light-theme):not(.retro-dark-theme) #stickyActions {
+                background-color: rgba(255, 255, 255, 0.6);
             }
             .value-input, select { 
                 width: 50px; 
@@ -868,6 +876,16 @@
                 background-color: var(--bg-color);
                 border-top: 1.7px solid var(--border-color);
                 gap: 10px;
+            }
+            body:not(.retro-light-theme):not(.retro-dark-theme) #visualizer-container,
+            body:not(.retro-light-theme):not(.retro-dark-theme) #mobile-fixed-buttons {
+                background-color: rgba(255, 255, 255, 0.15);
+                backdrop-filter: blur(10px);
+                -webkit-backdrop-filter: blur(10px);
+            }
+            body.light-theme:not(.retro-light-theme):not(.retro-dark-theme) #visualizer-container,
+            body.light-theme:not(.retro-light-theme):not(.retro-dark-theme) #mobile-fixed-buttons {
+                background-color: rgba(255, 255, 255, 0.6);
             }
             #mobile-fixed-buttons #loopBtn, #mobile-fixed-buttons #shuffleVisualizerBtn, #mobile-fixed-buttons #ejectBtn {
                 width: 50px; height: 50px; border-radius: 20%; 
@@ -1049,9 +1067,6 @@
                     </div>
                     
                     <div id="audioEditorContainer" class="hidden">
-
-                        <div id="oggInfoContainer" class="hidden"></div>
-                    	
                     	<div id="metadataContainer">
                             <img id="coverArt" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" alt="Cover Art">
                             <div class="metadata-fields">
@@ -1071,7 +1086,7 @@
                     	 	<div id="progressBarContainer"><div id="progressBar"></div></div>
                         
                         <div id="equalizerContainer"></div>
-                        <button id="reverseBtn">Reverse Audio</button>
+                        <button id="reverseBtn">Reverse</button>
                     	  
                         <div class="control-group">
                             <label for="editorVolume">Master Volume (dB)</label>
@@ -1103,17 +1118,13 @@
                                 <input type="number" id="editorReverbInput" class="value-input" min="0" max="1" step="0.01" value="0">
                             </div>
                         </div>
-                        
-                        <div id="rawStringsContainer">
-                            <div id="rawStringsHeader" onclick="openModalFor('rawStringsContainer')">
-                                <span style="font-size: 1.1em;">Watermark / Comments</span>
-                                <div>
-                                    <button class="code-action-btn" onclick="copyRawStrings(event)" title="Copy">⛶</button>
-                                </div>
+                         <div class="control-group">
+                            <label for="editorPan">Pan (-1 L / 1 R)</label>
+                            <div class="value-input-group">
+                                <input type="range" id="editorPan" min="-1" max="1" step="0.01" value="0">
+                                <input type="number" id="editorPanInput" class="value-input" min="-1" max="1" step="0.01" value="0">
                             </div>
-                            <textarea id="rawStringsOutput" placeholder="Enter a secret message or comment to embed in the audio file..."></textarea>
                         </div>
-
                     </div> 
                     
                     <div id="codeOutputContainer">
@@ -1157,12 +1168,12 @@
     <div class="corner-button" id="rightCornerBtn"></div>
 
     <div id="codeModalBackdrop" class="hidden">
-        <div id="codeModalPanel">
+        <div id="codeModalPanel" class="glass-panel">
         </div>
     </div>
 
     <div id="exportModalBackdrop" class="hidden">
-        <div id="exportModalPanel">
+        <div id="exportModalPanel" class="glass-panel">
             <h3>Export Audio As</h3>
             <div class="export-options">
                 <button id="exportWavBtn">WAV</button>
@@ -1170,6 +1181,18 @@
                 <button id="exportOggBtn">OGG</button>
             </div>
             <button id="closeExportModalBtn">Cancel</button>
+            <p class="export-note">Metadata tags are only saved to .mp3<br>(Other formats may not fully save tags)</p>
+        </div>
+    </div>
+
+    <div id="resetModalBackdrop" class="hidden">
+        <div id="resetModalPanel" class="glass-panel">
+            <h3 id="resetModalTitle">Confirm Reset</h3>
+            <p id="resetModalText" style="margin-bottom: 20px;"></p>
+            <div class="export-options">
+                <button id="resetConfirmBtn">Reset</button>
+                <button id="resetCancelBtn">Cancel</button>
+            </div>
         </div>
     </div>
 
@@ -1197,9 +1220,8 @@
         let eqBands = [];
         let isReversed = false;
         let loadedFileInfo = {};
-        const WATERMARK_KEY = 'XETSUESECRET';
 
-        let distortionNode, wetGainNode, dryGainNode, convolverNode, masterGainNode;
+        let distortionNode, wetGainNode, dryGainNode, convolverNode, masterGainNode, pannerNode;
 
         const DEFAULTS = {
             waveType: 'sine',
@@ -1254,8 +1276,8 @@
             eqContainer.innerHTML = '';
             const frequencies = [60, 170, 310, 600, 1000, 3000, 6000, 12000, 14000];
             const tooltips = [
-                "Super-Low-Bass (Rumble)", "Center of Bass", "Low-end Mid (Instruments)", "Low-end Mid Focal (Boxy)",
-                "Center Mid (Rhythm/Nasal)", "High Mid (Harmonics)", "Low-end High (Clarity)", "Core High-end (Echo)", "Highest Range (Crisp/Hiss)"
+                "Exteme-Low-Bass (Rumble)", "Center of Bass", "Low-end Mid (Vocal/Instruments)", "Low-mid Focal (Electric/Vocal/Box)",
+                "Center Mid (Rhythm/Nasal)", "High Mid (Harmonics/Orchestral)", "Low-end High (Clarity/ [S-T] Noise)", "Core High-end (Air/Echo)", "Highest Range (Overtone/Sharp)"
             ];
 
             frequencies.forEach((freq, i) => {
@@ -1333,10 +1355,8 @@
 
             if (window.innerWidth >= 769) {
                 document.getElementById('scrollableControls').appendChild(document.getElementById('codeOutputContainer'));
-                document.getElementById('audioEditorContainer').appendChild(document.getElementById('rawStringsContainer'));
             } else {
                 document.querySelector('.controls-group-right').appendChild(document.getElementById('codeOutputContainer'));
-                document.querySelector('#audioEditorContainer').appendChild(document.getElementById('rawStringsContainer'));
             }
             
             const visualizerContainer = document.getElementById('visualizer-container');
@@ -1346,8 +1366,6 @@
             visualizerContainer.addEventListener('drop', (e) => { e.preventDefault(); e.stopPropagation(); visualizerContainer.classList.remove('dragover'); const file = e.dataTransfer.files[0]; if (file) loadAudioFile(file); });
             document.getElementById('audioFileInput').addEventListener('change', (e) => { const file = e.target.files[0]; if (file) loadAudioFile(file); });
             
-            document.getElementById('progressBarContainer').addEventListener('click', seekAudio);
-            
             const pbRate = document.getElementById('playbackRate');
             const pbRateInput = document.getElementById('playbackRateInput');
             pbRate.addEventListener('input', () => { pbRateInput.value = pbRate.value; if(audioFileSource) audioFileSource.playbackRate.value = parseFloat(pbRate.value); });
@@ -1355,9 +1373,7 @@
             
             document.getElementById('reverseBtn').addEventListener('click', reverseAudio);
             document.getElementById('coverArt').addEventListener('click', () => {
-                if (!document.getElementById('coverArt').classList.contains('disabled')) {
-                    document.getElementById('coverArtInput').click();
-                }
+                document.getElementById('coverArtInput').click();
             });
             document.getElementById('coverArtInput').addEventListener('change', (e) => { const file = e.target.files[0]; if(file) { const reader = new FileReader(); reader.onload = (ev) => { document.getElementById('coverArt').src = ev.target.result; }; reader.readAsDataURL(file); }});
             
@@ -1414,6 +1430,70 @@
             document.getElementById('closeExportModalBtn').addEventListener('click', hideExportModal);
             document.getElementById('exportModalBackdrop').addEventListener('click', (e) => {
                 if (e.target.id === 'exportModalBackdrop') hideExportModal();
+            });
+
+            document.getElementById('resetConfirmBtn').addEventListener('click', handleResetConfirm);
+            document.getElementById('resetCancelBtn').addEventListener('click', hideResetModal);
+            document.getElementById('resetModalBackdrop').addEventListener('click', (e) => {
+                if (e.target.id === 'resetModalBackdrop') hideResetModal();
+            });
+
+            const editorPan = document.getElementById('editorPan');
+            const editorPanInput = document.getElementById('editorPanInput');
+            editorPan.addEventListener('input', () => { editorPanInput.value = editorPan.value; if (pannerNode) pannerNode.pan.setValueAtTime(parseFloat(editorPan.value), audioContext.currentTime); });
+            editorPanInput.addEventListener('input', () => { editorPan.value = editorPanInput.value; if (pannerNode) pannerNode.pan.setValueAtTime(parseFloat(editorPanInput.value), audioContext.currentTime); });
+
+            const progressBarContainer = document.getElementById('progressBarContainer');
+            let isSeeking = false;
+            
+            const handleSeek = (e) => {
+                if (!audioFileBuffer) return;
+                const rect = progressBarContainer.getBoundingClientRect();
+                const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+                if (clientX === undefined) return;
+
+                const clickX = clientX - rect.left;
+                let progress = clickX / rect.width;
+                progress = Math.max(0, Math.min(1, progress));
+
+                const seekTime = audioFileBuffer.duration * progress;
+                document.getElementById('progressBar').style.width = `${progress * 100}%`;
+                playbackStartOffset = seekTime;
+
+                if (isPlaying) {
+                    if (audioFileSource) {
+                        audioFileSource.onended = null;
+                        try { audioFileSource.stop(); } catch(err) {}
+                    }
+                    playAudioFile(seekTime);
+                }
+            };
+            
+            progressBarContainer.addEventListener('mousedown', (e) => {
+                isSeeking = true;
+                handleSeek(e);
+            });
+            progressBarContainer.addEventListener('touchstart', (e) => {
+                isSeeking = true;
+                handleSeek(e);
+            }, { passive: true });
+
+            window.addEventListener('mousemove', (e) => {
+                if (isSeeking) {
+                    handleSeek(e);
+                }
+            });
+            window.addEventListener('touchmove', (e) => {
+                if (isSeeking) {
+                    handleSeek(e);
+                }
+            }, { passive: true });
+
+            window.addEventListener('mouseup', () => {
+                isSeeking = false;
+            });
+            window.addEventListener('touchend', () => {
+                isSeeking = false;
             });
         });
 
@@ -1545,6 +1625,7 @@
              if (currentSound && currentSound.osc) {
                 try {
                     const now = audioContext.currentTime;
+                    currentSound.osc.onended = null;
                     currentSound.gain.gain.cancelScheduledValues(now);
                     currentSound.gain.gain.setValueAtTime(currentSound.gain.gain.value, now);
                     currentSound.gain.gain.linearRampToValueAtTime(0.0001, now + 0.05);
@@ -1554,6 +1635,7 @@
             }
             
             if(audioFileSource) {
+                audioFileSource.onended = null;
                 try { audioFileSource.stop(); } catch(e) {}
                 audioFileSource.disconnect();
                 audioFileSource = null;
@@ -1563,12 +1645,14 @@
                 cancelAnimationFrame(animationFrameId);
                 animationFrameId = null;
             }
-            drawBlankVisualizer();
+            
             currentSound = null;
             isPlaying = false;
+            
             if (isAudioFileLoaded) {
                 document.getElementById('reverseBtn').disabled = false;
             }
+            drawBlankVisualizer();
         }
         
         function updateLoopButton() {
@@ -1729,24 +1813,18 @@
                 osc.start(now);
                 osc.stop(releaseEnd + 0.05);
 
-                if (loopMode === 1) {
-                    osc.onended = () => {
-                        if (currentSound && currentSound.osc === osc && loopMode === 1) {
-                            currentSound = null;
-                            playCustomSound();
-                        }
-                    };
-                } else {
-                    osc.onended = () => {
+                osc.onended = () => {
+                    if (loopMode === 1 && isPlaying) {
+                         playCustomSound();
+                    } else {
                         document.querySelectorAll('#playBtn').forEach(btn => btn.disabled = false);
-                        if (animationFrameId) { cancelAnimationFrame(animationFrameId); animationFrameId = null; }
-                        drawBlankVisualizer();
-                        currentSound = null;
-                    };
-                }
+                        stopCurrentSound();
+                    }
+                };
             }
             
             currentSound = { osc, filter, gain, lfo }; 
+            isPlaying = true;
             visualize();
         }
 
@@ -1811,7 +1889,7 @@
 
             let infoChunkSize = 0;
             const infoChunks = [];
-            const metaMap = { title: 'INAM', artist: 'IART', album: 'IPRD', year: 'ICRD', track: 'ITRK', genre: 'IGNR', albumArtist: 'TPE2', watermark: 'ICMT' };
+            const metaMap = { title: 'INAM', artist: 'IART', album: 'IPRD', year: 'ICRD', track: 'ITRK', genre: 'IGNR', albumArtist: 'TPE2' };
 
             if (metadata) {
                 for (const key in metaMap) {
@@ -1993,25 +2071,18 @@
             const quality = 0.6;
             let comments = [];
 
-            const watermark = document.getElementById('rawStringsOutput').value.trim();
-            if(watermark) {
-                comments.push(`${WATERMARK_KEY}=${watermark}`);
-            }
-
-            if (metadata) {
-                const keyMap = {
-                    title: 'TITLE',
-                    artist: 'ARTIST',
-                    album: 'ALBUM',
-                    albumArtist: 'ALBUMARTIST',
-                    track: 'TRACKNUMBER',
-                    year: 'DATE',
-                    genre: 'GENRE'
-                };
-                for (const key in keyMap) {
-                    if (metadata[key]) {
-                        comments.push(`${keyMap[key]}=${metadata[key]}`);
-                    }
+            const keyMap = {
+                title: 'TITLE',
+                artist: 'ARTIST',
+                album: 'ALBUM',
+                albumArtist: 'ALBUMARTIST',
+                track: 'TRACKNUMBER',
+                year: 'DATE',
+                genre: 'GENRE'
+            };
+            for (const key in keyMap) {
+                if (metadata[key]) {
+                    comments.push(`${keyMap[key]}=${metadata[key]}`);
                 }
             }
 
@@ -2120,8 +2191,7 @@
             osc.stop(envelopeEnd + 0.05);
             
             const renderedBuffer = await offlineCtx.startRendering();
-            const watermarkText = document.getElementById('rawStringsOutput').value.trim();
-            const metadata = watermarkText ? { watermark: watermarkText } : {};
+            const metadata = {};
 
             if (format === 'wav') {
                 const wav = bufferToWav(renderedBuffer, {}, metadata);
@@ -2152,14 +2222,6 @@
             if(metadata.year) writer.setFrame('TYER', metadata.year);
             if(metadata.track) writer.setFrame('TRCK', metadata.track);
             if(metadata.genre) writer.setFrame('TCON', [metadata.genre]);
-            
-            const watermark = document.getElementById('rawStringsOutput').value.trim();
-            if(watermark){
-                 writer.setFrame('COMM', {
-                    description: WATERMARK_KEY,
-                    text: watermark
-                });
-            }
 
             const coverArtImg = document.getElementById('coverArt');
             if (coverArtImg.src && !coverArtImg.src.startsWith('data:image/gif')) {
@@ -2233,6 +2295,13 @@
                 lastNode = reverbMerger;
             }
             
+            if (offlineCtx.destination.channelCount > 1) {
+                const exportPanner = offlineCtx.createStereoPanner();
+                exportPanner.pan.value = parseFloat(document.getElementById('editorPan').value);
+                lastNode.connect(exportPanner);
+                lastNode = exportPanner;
+            }
+
             lastNode.connect(finalGain);
             finalGain.connect(offlineCtx.destination);
             source.start(0);
@@ -2251,7 +2320,6 @@
             const newTitle = metadata.title || 'edited_audio';
 
             if (format === 'wav') {
-                metadata.watermark = document.getElementById('rawStringsOutput').value.trim();
                 const wav = bufferToWav(renderedBuffer, {}, metadata);
                 const blob = new Blob([wav], { type: 'audio/wav' });
                 downloadBlob(blob, `${newTitle}.wav`);
@@ -2272,65 +2340,70 @@
         function drawRings(canvasCtx, dataArray, W, H, color) { const centerX = W / 2; const centerY = H / 2; const bufferLength = dataArray.length; const maxRadius = Math.min(W, H) / .5; let energy = 0; for (let i = 0; i < bufferLength; i++) { energy += dataArray[i]; } energy = energy / bufferLength / 255.0; for (let i = 1; i <= 3; i++) { canvasCtx.beginPath(); const radius = (maxRadius * energy) * (i / 3); let r=0, g=0, b=0; if (color.startsWith('#') && color.length >= 7) { r = parseInt(color.slice(1, 3), 16); g = parseInt(color.slice(3, 5), 16); b = parseInt(color.slice(5, 7), 16); } canvasCtx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${1 - (i / 4)})`; canvasCtx.lineWidth = 1 + (4-i); canvasCtx.arc(centerX, centerY, radius, 0, 2 * Math.PI); canvasCtx.stroke(); } }
 
         function visualize() {
-            if (!analyser) return;
-            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+            if (!analyser || !isPlaying) {
+                if(animationFrameId) cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+                drawBlankVisualizer();
+                return;
+            }
             
             const canvas = document.getElementById('visualizer');
             const canvasCtx = canvas.getContext('2d');
             const style = getComputedStyle(document.body);
             const bgColor = style.getPropertyValue('--code-bg-color');
             const textColor = style.getPropertyValue('--text-color');
+            
+            analyser.fftSize = 2048;
+            const bufferLength = analyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+            const timeDataArray = new Uint8Array(analyser.fftSize);
+
             canvas.width = canvas.offsetWidth;
             canvas.height = canvas.offsetHeight;
-            analyser.fftSize = 2048;
-            
-            const dataArrays = {
-                frequency: new Uint8Array(analyser.frequencyBinCount),
-                time: new Uint8Array(analyser.fftSize)
-            };
-            
+
             const draw = () => {
-                if (!currentSound && !audioFileSource) {
-                    if (animationFrameId) cancelAnimationFrame(animationFrameId);
-                    animationFrameId = null;
-                    drawBlankVisualizer();
-                    return;
-                }
                 animationFrameId = requestAnimationFrame(draw);
-                const visualizerType = VISUALIZER_TYPES[currentVisualizerIndex];
+                if (!isPlaying) { return; }
                 
                 canvasCtx.fillStyle = bgColor;
                 canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
                 
-                if (isAudioFileLoaded && audioFileSource) {
-                    const progress = ( (audioContext.currentTime - playbackStartTime + playbackStartOffset) % audioFileBuffer.duration) / audioFileBuffer.duration;
-                    document.getElementById('progressBar').style.width = `${progress * 100}%`;
+                if (isAudioFileLoaded && isPlaying && audioFileBuffer) {
+                    const currentTime = playbackStartOffset + (audioContext.currentTime - playbackStartTime);
+                    const progress = (currentTime / audioFileBuffer.duration);
+                    if(!isNaN(progress) && progress <= 1) {
+                        document.getElementById('progressBar').style.width = `${progress * 100}%`;
+                    }
                 }
-                
+
+                const visualizerType = VISUALIZER_TYPES[currentVisualizerIndex];
                 switch (visualizerType) {
                     case 'line':
-                        analyser.getByteTimeDomainData(dataArrays.time);
-                        drawLine(canvasCtx, dataArrays.time, canvas.width, canvas.height, textColor);
+                        analyser.getByteTimeDomainData(timeDataArray);
+                        drawLine(canvasCtx, timeDataArray, canvas.width, canvas.height, textColor);
                         break;
                     case 'circle':
-                        analyser.getByteFrequencyData(dataArrays.frequency);
-                        drawCircle(canvasCtx, dataArrays.frequency, canvas.width, canvas.height, textColor);
+                        analyser.getByteFrequencyData(dataArray);
+                        drawCircle(canvasCtx, dataArray, canvas.width, canvas.height, textColor);
                         break;
                     case 'wave':
-                        analyser.getByteFrequencyData(dataArrays.frequency);
-                        drawWave(canvasCtx, dataArrays.frequency, canvas.width, canvas.height, textColor);
+                        analyser.getByteFrequencyData(dataArray);
+                        drawWave(canvasCtx, dataArray, canvas.width, canvas.height, textColor);
                         break;
                     case 'rings':
-                        analyser.getByteFrequencyData(dataArrays.frequency);
-                        drawRings(canvasCtx, dataArrays.frequency, canvas.width, canvas.height, textColor);
+                        analyser.getByteFrequencyData(dataArray);
+                        drawRings(canvasCtx, dataArray, canvas.width, canvas.height, textColor);
                         break;
-                    default:
-                        analyser.getByteFrequencyData(dataArrays.frequency);
-                        drawBars(canvasCtx, dataArrays.frequency, canvas.width, canvas.height, textColor);
+                    default: 
+                        analyser.getByteFrequencyData(dataArray);
+                        drawBars(canvasCtx, dataArray, canvas.width, canvas.height, textColor);
                         break;
                 }
             };
-            draw();
+            
+            if (!animationFrameId) {
+                draw();
+            }
         }
 
         function generateCode() {
@@ -2372,7 +2445,64 @@ function createCustomTone(audioContext) {
         function parseCode(code) { const settings = {}; const regex = /const ([A-Z_]+) = (.+);/g; let match; while ((match = regex.exec(code)) !== null) { const name = match[1].toLowerCase().replace(/_(\w)/g, (m, c) => c.toUpperCase()); let value = match[2].trim().replace(/[';]/g, ''); if (!isNaN(parseFloat(value))) { value = parseFloat(value); } settings[name] = value; } return (Object.keys(settings).length >= 15) ? settings : null; }
         function toggleTheme() { const btn = document.getElementById('themeToggleBtn'); btn.classList.add('animate-spin-out'); setTimeout(() => { currentThemeIndex = (currentThemeIndex + 1) % THEMES.length; const newTheme = THEMES[currentThemeIndex]; document.body.className = ''; if (newTheme !== 'default') { document.body.classList.add(newTheme); } localStorage.setItem('synthTheme', newTheme); drawBlankVisualizer(); btn.classList.remove('animate-spin-out'); btn.classList.add('animate-spin-in'); setTimeout(() => btn.classList.remove('animate-spin-in'), 500); }, 500); }
         function toggleButtonSide(targetDirection) { const container = document.getElementById('sideButtons'); const currentSide = container.classList.contains('right') ? 'right' : 'left'; if (targetDirection === currentSide) return; const buttons = container.querySelectorAll('.action-btn'); buttons.forEach(btn => btn.classList.add('animate-spin-out')); setTimeout(() => { container.classList.remove('right', 'left'); container.classList.add(targetDirection); localStorage.setItem('synthButtonSide', targetDirection); buttons.forEach(btn => { btn.classList.remove('animate-spin-out'); btn.classList.add('animate-spin-in'); }); setTimeout(() => buttons.forEach(btn => btn.classList.remove('animate-spin-in')), 500); }, 500); }
-        function resetButtonAction(e) { e.stopPropagation(); if (isAudioFileLoaded) { if (confirm('Reset all audio adjustments?')) { document.querySelectorAll('#equalizerContainer input').forEach(s => s.value = 0); eqBands.forEach(b => b.gain.value = 0); document.getElementById('playbackRate').value = 1; document.getElementById('playbackRateInput').value = 1; if(audioFileSource) audioFileSource.playbackRate.value = 1; } } else { if (confirm('Are you sure you want to reset all synthesizer settings to default?')) { localStorage.removeItem('synthSettings'); loadSettings(DEFAULTS); generateCode(); stopCurrentSound(); loopMode = 0; updateLoopButton(); } } }
+        
+        function showResetModal(text) {
+            document.getElementById('resetModalText').textContent = text;
+            const modal = document.getElementById('resetModalBackdrop');
+            modal.classList.remove('hidden');
+            setTimeout(() => modal.classList.add('visible'), 10);
+        }
+
+        function hideResetModal() {
+            const modal = document.getElementById('resetModalBackdrop');
+            modal.classList.remove('visible');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        }
+        
+        function handleResetConfirm() {
+            if (isAudioFileLoaded) {
+                document.querySelectorAll('#equalizerContainer input').forEach(s => s.value = 0);
+                if (eqBands) eqBands.forEach(b => b.gain.value = 0);
+                document.getElementById('playbackRate').value = 1;
+                document.getElementById('playbackRateInput').value = 1;
+                if(audioFileSource) audioFileSource.playbackRate.value = 1;
+
+                document.getElementById('editorVolume').value = 0;
+                document.getElementById('editorVolumeInput').value = 0;
+                document.getElementById('editorDistortion').value = 0;
+                document.getElementById('editorDistortionInput').value = 0;
+                document.getElementById('editorReverb').value = 0;
+                document.getElementById('editorReverbInput').value = 0;
+                document.getElementById('editorPan').value = 0;
+                document.getElementById('editorPanInput').value = 0;
+                
+                if(audioContext) {
+                    if (masterGainNode) masterGainNode.gain.setValueAtTime(1, audioContext.currentTime);
+                    if (distortionNode) distortionNode.curve = makeDistortionCurve(0);
+                    if (wetGainNode) wetGainNode.gain.setValueAtTime(0, audioContext.currentTime);
+                    if (dryGainNode) dryGainNode.gain.setValueAtTime(1, audioContext.currentTime);
+                    if (pannerNode) pannerNode.pan.setValueAtTime(0, audioContext.currentTime);
+                }
+
+            } else {
+                localStorage.removeItem('synthSettings');
+                loadSettings(DEFAULTS);
+                generateCode();
+                stopCurrentSound();
+                loopMode = 0;
+                updateLoopButton();
+            }
+            hideResetModal();
+        }
+        
+        function resetButtonAction(e) {
+            e.stopPropagation();
+            if (isAudioFileLoaded) {
+                showResetModal('Reset all audio adjustments?');
+            } else {
+                showResetModal('Are you sure you want to reset all synthesizer settings to default?');
+            }
+        }
 
         function loadSettings(customSettings) {
             let settings;
@@ -2431,23 +2561,17 @@ function createCustomTone(audioContext) {
 
         function updateFileInfoDisplay(info) {
             const container = document.getElementById('audioFileInfoContainer');
-            const oggContainer = document.getElementById('oggInfoContainer');
-
             if (!info || !info.duration) {
                 container.innerHTML = '';
-                oggContainer.innerHTML = '';
                 return;
             }
             
-            const infoHtml = `
+            container.innerHTML = `
                 <b>File:</b> ${info.name}<br>
                 <b>Duration:</b> ${info.duration.toFixed(2)}s | <b>Size:</b> ${(info.size / 1024 / 1024).toFixed(2)} MB<br>
                 <b>Bitrate:</b> ~${info.bitrate} kbps | <b>Sample Rate:</b> ${info.sampleRate} Hz<br>
                 <b>Channels:</b> ${info.channels === 1 ? 'Mono' : info.channels === 2 ? 'Stereo' : info.channels}
             `;
-
-            container.innerHTML = infoHtml;
-            oggContainer.innerHTML = infoHtml;
         }
         
         function toggleAudioEditorMode(isLoaded, fileType = '') {
@@ -2457,12 +2581,7 @@ function createCustomTone(audioContext) {
             document.querySelectorAll('#ejectBtn').forEach(b => b.classList.toggle('hidden', !isLoaded));
             document.getElementById('codeOutputContainer').classList.toggle('hidden', isLoaded);
             
-            const isOgg = fileType.includes('ogg');
-            const isWav = fileType.includes('wav');
-            
-            document.getElementById('metadataContainer').classList.toggle('hidden', isOgg);
-            document.getElementById('oggInfoContainer').classList.toggle('hidden', !isOgg);
-            document.getElementById('coverArt').classList.toggle('disabled', isWav);
+            document.getElementById('metadataContainer').classList.toggle('hidden', !isLoaded);
 
             loopMode = 0;
             updateLoopButton();
@@ -2477,15 +2596,16 @@ function createCustomTone(audioContext) {
                 document.getElementById('editorDistortionInput').value = 0;
                 document.getElementById('editorReverb').value = 0;
                 document.getElementById('editorReverbInput').value = 0;
+                document.getElementById('editorPan').value = 0;
+                document.getElementById('editorPanInput').value = 0;
                 updateFileInfoDisplay();
             }
         }
         
         async function playAudioFile(offset = 0) {
             if (!audioFileBuffer) return;
-            stopCurrentSound();
             await initContext();
-
+            
             audioFileSource = audioContext.createBufferSource();
             audioFileSource.buffer = audioFileBuffer;
             audioFileSource.loop = loopMode > 0;
@@ -2521,19 +2641,31 @@ function createCustomTone(audioContext) {
             });
             
             lastNode.connect(distortionNode);
+
+            const reverbMerger = audioContext.createGain();
             distortionNode.connect(dryGainNode);
             distortionNode.connect(wetGainNode);
             wetGainNode.connect(convolverNode);
-            dryGainNode.connect(analyser);
-            convolverNode.connect(analyser);
+            dryGainNode.connect(reverbMerger);
+            convolverNode.connect(reverbMerger);
+            lastNode = reverbMerger;
+
+            pannerNode = audioContext.createStereoPanner();
+            pannerNode.pan.value = parseFloat(document.getElementById('editorPan').value);
+            lastNode.connect(pannerNode);
+            lastNode = pannerNode;
+            
+            lastNode.connect(analyser);
 
             playbackStartOffset = offset;
             playbackStartTime = audioContext.currentTime;
             
             audioFileSource.start(0, offset);
             
+            isPlaying = true;
+
             audioFileSource.onended = () => {
-                if (!audioFileSource.loop) {
+                if (!audioFileSource.loop && isPlaying) {
                     stopCurrentSound();
                     document.querySelectorAll('#playBtn').forEach(btn => btn.textContent = 'PLAY');
                     playbackStartOffset = 0;
@@ -2541,7 +2673,6 @@ function createCustomTone(audioContext) {
                 }
             };
 
-            isPlaying = true;
             document.getElementById('reverseBtn').disabled = true;
             visualize();
         }
@@ -2567,22 +2698,6 @@ function createCustomTone(audioContext) {
             drawBlankVisualizer();
         }
 
-        function seekAudio(e) {
-            if (!audioFileBuffer) return;
-            const progressBar = document.getElementById('progressBarContainer');
-            const rect = progressBar.getBoundingClientRect();
-            const clickX = e.clientX - rect.left;
-            const progress = clickX / rect.width;
-            const seekTime = audioFileBuffer.duration * progress;
-            
-            playbackStartOffset = seekTime;
-            if (isPlaying) {
-                playAudioFile(seekTime);
-            } else {
-                 document.getElementById('progressBar').style.width = `${progress * 100}%`;
-            }
-        }
-        
         async function parseMetadata(file) {
             resetMetadata();
             window.jsmediatags.read(file, {
@@ -2595,7 +2710,7 @@ function createCustomTone(audioContext) {
                     document.getElementById('metaYear').value = tags.year || '';
                     document.getElementById('metaTrack').value = tags.track || '';
                     document.getElementById('metaGenre').value = tags.genre || '';
-                    document.getElementById('metaAlbumArtist').value = tags.TPE2 || '';
+                    document.getElementById('metaAlbumArtist').value = (tags.TPE2 && tags.TPE2.data) ? tags.TPE2.data : (tags.album_artist || '');
 
                     if (tags.picture) {
                         const { data, format } = tags.picture;
@@ -2604,11 +2719,6 @@ function createCustomTone(audioContext) {
                             base64String += String.fromCharCode(data[i]);
                         }
                         document.getElementById('coverArt').src = `data:${format};base64,${window.btoa(base64String)}`;
-                    }
-
-                    // Check for our custom watermark
-                    if (tags.comment && tags.comment.description === WATERMARK_KEY) {
-                         document.getElementById('rawStringsOutput').value = tags.comment.text;
                     }
                 },
                 onError: function(error) {
@@ -2626,7 +2736,6 @@ function createCustomTone(audioContext) {
             document.getElementById('metaGenre').value = '';
             document.getElementById('metaAlbumArtist').value = '';
             document.getElementById('coverArt').src = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
-            document.getElementById('rawStringsOutput').value = '';
         }
         
         function reverseAudio() {
@@ -2653,20 +2762,9 @@ function createCustomTone(audioContext) {
                 } else {
                     audioFileBuffer = originalAudioFileBuffer;
                 }
-                btn.textContent = "Reverse Audio";
+                btn.textContent = "Reverse";
                 btn.disabled = false;
             }, 10);
-        }
-
-        function copyRawStrings(e) {
-            e.stopPropagation();
-            const rawStringsOutput = document.getElementById('rawStringsOutput');
-            rawStringsOutput.select();
-            document.execCommand('copy');
-            const btn = e.target.closest('button');
-            const originalText = btn.textContent;
-            btn.textContent = '☻';
-            setTimeout(() => { btn.textContent = originalText; }, 1000);
         }
 
         function handleKeyboardShortcuts(event) {
@@ -2686,15 +2784,17 @@ function createCustomTone(audioContext) {
             if (isAudioFileLoaded && (event.code === 'ArrowLeft' || event.code === 'ArrowRight')) {
                 event.preventDefault();
                 if (!audioFileBuffer) return;
+                const wasPlaying = isPlaying;
                 const seekAmount = event.code === 'ArrowLeft' ? -5 : 5;
-                const newTime = Math.max(0, Math.min(audioFileBuffer.duration, playbackStartOffset + seekAmount));
+                let newTime = playbackStartOffset + (isPlaying ? (audioContext.currentTime - playbackStartTime) : 0) + seekAmount;
+                newTime = Math.max(0, Math.min(audioFileBuffer.duration, newTime));
                 
-                document.getElementById('progressBar').style.width = `${(newTime / audioFileBuffer.duration) * 100}%`;
-                
-                if (isPlaying) {
+                if (wasPlaying) {
+                    stopCurrentSound();
                     playAudioFile(newTime);
                 } else {
                     playbackStartOffset = newTime;
+                    document.getElementById('progressBar').style.width = `${(newTime / audioFileBuffer.duration) * 100}%`;
                 }
             }
         }
