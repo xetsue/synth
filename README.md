@@ -1,13 +1,33 @@
+# Synthesizer and Audio Editor
 
 ## ./SYNTH
 Primary feature: Audio synthesizer oscilloscope inspired test in browser without using any audio file or third party softwares.
 
-Uses local Browser / Web Audio API to synthesize digital sound effects. 
-> Export format supports  `.mp3` `.wav` `.ogg`
+Uses local Browser / Web Audio API to synthesize digital sound effects with options.
 
-Secondary Feature: Audio File ./EDITOR 
+> Export supports  `.mp3` `.wav` `.ogg`
+
+#### `[Modes]` — Clicking the page header switches between Synthesizer and Editor. 
+
+`⏏` Eject button to leave Editor mode.
+
+`⌘` To switch visualizer types.
+
+`月` Switch Themes.
+
+`E` Export and download edited file.
+
+#### `[Load Files]` — Click on visualizer display panel ( Drag and drop is also supported ) 
+
 ## ./EDITOR
 Usage: Tap Display Visualizer / Drag and drop files to the visualizer to load any audio files.
+
+> **Update Patches**
+
+Importing now supports all media types as long as audio codec is present such as `.mp4` `.mp3` etc.
+
+> `[!]` Metadata edits are saved for `.mp3` exports only. 
+
 
 ### Edits `.mp3` and `.wav`
 - Tags / Metadata
