@@ -1769,9 +1769,103 @@
                 this.renderTrackList(); this.renderNotes(); this.resize(); 
             },
             async export(format) {
-                const dur = this.settings.duration; const ctx = new OfflineAudioContext(2, 44100 * dur, 44100);
-                this.initPlayer();
-                alert("Offline export for WebAudioFont instruments is limited in this demo. Only samples and simple synths will export correctly.");
+                hideExportModal();
+                const btn = document.getElementById('exportBtn');
+                const originalText = btn.textContent;
+                btn.textContent = '…';
+                btn.disabled = true;
+
+                try {
+                    const dur = this.settings.duration;
+                    const ctx = new OfflineAudioContext(2, 44100 * dur, 44100);
+                    this.initPlayer();
+
+                    const master = ctx.createGain();
+                    master.gain.value = 1.0;
+                    master.connect(ctx.destination);
+
+                    this.tracks.forEach(track => {
+                        if (track.muted) return;
+
+                        const fx = this.getFxChain(ctx, track);
+                        fx.output.connect(master);
+
+                        track.notes.forEach(note => {
+                            const start = note.start;
+                            const duration = note.duration;
+                            const pitch = note.pitch + this.transpose;
+
+                            if (track.type === 'sample' && track.data.buffer) {
+                                const src = ctx.createBufferSource();
+                                src.buffer = track.data.buffer;
+                                const freq = 440 * Math.pow(2, (pitch - 69) / 12);
+                                src.playbackRate.value = freq / 440;
+                                const gain = ctx.createGain();
+                                gain.gain.value = track.vol;
+                                src.connect(gain);
+                                gain.connect(fx.input);
+                                src.start(start);
+                                src.stop(start + duration);
+                            } else {
+                                const instr = getInstrumentData(track.type, track.instrument);
+                                if(instr && instr.cat === 'legacy') {
+                                    const freq = 440 * Math.pow(2, (pitch - 69) / 12);
+                                    const osc = ctx.createOscillator();
+                                    const gain = ctx.createGain();
+                                    
+                                    gain.gain.setValueAtTime(0, start);
+                                    
+                                    let n = osc;
+                                    let attack = 0.01;
+                                    let release = 0.1;
+
+                                    if(instr.legacyId === 'bell') {
+                                        osc.type = 'sine';
+                                        const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 800;
+                                        n.connect(hp); n = hp;
+                                        release = 1.0;
+                                    } else if(instr.legacyId === 'pad') {
+                                        osc.type = 'triangle';
+                                        const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 1000;
+                                        n.connect(lp); n = lp;
+                                        attack = 0.5; release = 1.0;
+                                    } else if(instr.legacyId === '8bit') {
+                                        osc.type = 'square';
+                                        attack = 0.01; release = 0.05;
+                                    } else {
+                                        osc.type = 'triangle';
+                                    }
+
+                                    osc.frequency.setValueAtTime(freq, start);
+                                    n.connect(gain);
+                                    gain.connect(fx.input);
+                                    
+                                    gain.gain.linearRampToValueAtTime(track.vol, start + attack);
+                                    gain.gain.setValueAtTime(track.vol, start + duration - 0.01);
+                                    gain.gain.linearRampToValueAtTime(0, start + duration + release);
+                                    
+                                    osc.start(start);
+                                    osc.stop(start + duration + release);
+                                } else if (instr && window[instr.var]) {
+                                    const preset = window[instr.var];
+                                    this.player.queueWaveTable(ctx, fx.input, preset, start, pitch, duration, track.vol);
+                                }
+                            }
+                        });
+                    });
+
+                    const b = await ctx.startRendering();
+                    if (format === 'wav') downloadBlob(new Blob([bufferToWav(b, {}, {})], { type: 'audio/wav' }), 'project.wav');
+                    else if (format === 'mp3') downloadBlob(audioBufferToMp3(b), 'project.mp3');
+                    else if (format === 'ogg') downloadBlob(await audioBufferToOgg(b, {}), 'project.ogg');
+
+                } catch(err) {
+                    console.error(err);
+                    alert('Export failed.');
+                } finally {
+                    btn.textContent = originalText;
+                    btn.disabled = false;
+                }
             },
             saveProject() {
                 const data = JSON.stringify({ tracks: this.tracks, settings: this.settings });
