@@ -337,6 +337,39 @@
         .mobile-key.black:active, .mobile-key.black.active-touch { background: #333; transform: scale(0.98); }
         .mobile-key.active-touch { background: var(--loop-color) !important; }
 
+        body:not(.retro-light-theme):not(.retro-dark-theme) .ws-controls button,
+        body:not(.retro-light-theme):not(.retro-dark-theme) .ws-info input,
+        body:not(.retro-light-theme):not(.retro-dark-theme) .ws-info select,
+        body:not(.retro-light-theme):not(.retro-dark-theme) .track-header,
+        body:not(.retro-light-theme):not(.retro-dark-theme) .ws-top-bar,
+        body:not(.retro-light-theme):not(.retro-dark-theme) #sequencerArea,
+        body:not(.retro-light-theme):not(.retro-dark-theme) #trackList,
+        body:not(.retro-light-theme):not(.retro-dark-theme) #pianoRollContainer,
+        body:not(.retro-light-theme):not(.retro-dark-theme) #keysSidebar {
+            border-radius: 6px;
+        }
+
+        .track-header { margin-bottom: 4px; }
+
+        body:not(.retro-light-theme):not(.retro-dark-theme) #addTrackMenu,
+        body:not(.retro-light-theme):not(.retro-dark-theme) #trackContextMenu,
+        body:not(.retro-light-theme):not(.retro-dark-theme) #gridContextMenu,
+        body:not(.retro-light-theme):not(.retro-dark-theme) #typeSelectMenu {
+            background-color: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        body.light-theme:not(.retro-light-theme):not(.retro-dark-theme) #addTrackMenu,
+        body.light-theme:not(.retro-light-theme):not(.retro-dark-theme) #trackContextMenu,
+        body.light-theme:not(.retro-light-theme):not(.retro-dark-theme) #gridContextMenu,
+        body.light-theme:not(.retro-light-theme):not(.retro-dark-theme) #typeSelectMenu {
+            background-color: rgba(255, 255, 255, 0.85);
+            border: 1px solid rgba(0,0,0,0.2);
+        }
+
         @media (min-width: 769px) {
             body { padding: 20px; }
             #globalTitle { margin: 0 0 20px 0; align-self: center; text-align: center; }
@@ -380,17 +413,19 @@
             #mobile-fixed-buttons #recBtn { flex-grow: 0; flex-basis: 70px; }
             #codeOutputContainer { margin-top: 30px; }
             .value-input, select { width: 70px; }
-            #workstationContainer { margin-top: 60px; height: calc(100vh - 180px); }
+            #workstationContainer { margin-top: 60px; height: calc(100vh - 180px); border-width: 1.5px; }
             #trackList { width: 120px; }
             .ws-top-bar { gap: 5px; }
             #effectsModalPanel { max-width: 90%; }
             #sequencerArea { height: calc(60vh - 150px); }
+            .ws-top-bar, #sequencerArea, #keysSidebar, #gridContainer, #trackList, #mobileKeyboard { border-width: 1.5px; }
         }
     </style>
 </head>
 <body id="body">
     <input type="file" id="audioFileInput" class="hidden" accept="audio/*,video/mp4">
     <input type="file" id="coverArtInput" class="hidden" accept="image/*">
+    <input type="file" id="jsonLoadInput" class="hidden" accept=".json">
     <div class="header-fixed">
         <h1 id="globalTitle">./SYNTH.</h1>
     </div>
@@ -529,8 +564,14 @@
 
     <div id="exportModalBackdrop" class="hidden">
         <div id="exportModalPanel" class="glass-panel">
-            <h3>Export Audio As</h3>
-            <div class="export-options"><button id="exportWavBtn">WAV</button><button id="exportMp3Btn">MP3</button><button id="exportOggBtn">OGG</button></div>
+            <h3>Export / Load</h3>
+            <div class="export-options">
+                <button id="exportWavBtn">WAV</button><button id="exportMp3Btn">MP3</button><button id="exportOggBtn">OGG</button>
+            </div>
+            <div class="export-options">
+                <button onclick="DAW.saveProject()">JSON</button>
+                <button onclick="document.getElementById('jsonLoadInput').click()">LOAD</button>
+            </div>
             <button id="closeExportModalBtn">Cancel</button>
             <p class="export-note">Metadata tags are only saved to .mp3<br>(Other formats may not fully save tags)</p>
         </div>
@@ -584,6 +625,7 @@
         
         const createInstr = (id, name) => ({ id, name, cat: 'melodic' });
         const createDrum = (id, name, file) => ({ id, name, file, cat: 'drum' });
+        const createLegacy = (name, legacyId) => ({ name, id: legacyId, cat: 'legacy', legacyId: legacyId });
 
         const INSTRUMENT_LIBRARY = {
             'Piano': [
@@ -663,19 +705,41 @@
                 createDrum(71, 'Short Whistle', '71_16_JCLive_sf2_file'), createDrum(72, 'Long Whistle', '72_16_JCLive_sf2_file'), createDrum(73, 'Short Guiro', '73_16_JCLive_sf2_file'), createDrum(74, 'Long Guiro', '74_16_JCLive_sf2_file'),
                 createDrum(75, 'Claves', '75_16_JCLive_sf2_file'), createDrum(76, 'High Wood Block', '76_16_JCLive_sf2_file'), createDrum(77, 'Low Wood Block', '77_16_JCLive_sf2_file'), createDrum(78, 'Mute Cuica', '78_16_JCLive_sf2_file'),
                 createDrum(79, 'Open Cuica', '79_16_JCLive_sf2_file'), createDrum(80, 'Mute Triangle', '80_16_JCLive_sf2_file'), createDrum(81, 'Open Triangle', '81_16_JCLive_sf2_file')
+            ],
+            'Legacy': [
+                createLegacy('Piano', 'piano'),
+                createLegacy('Bell', 'bell'),
+                createLegacy('Pad', 'pad'),
+                createLegacy('8-bit', '8bit')
             ]
         };
 
         function getInstrumentData(category, name) {
-            // Special handling for Drum Kit which uses a single large file for all pieces
-            if (category === 'Drum Kit') {
-                 return { name: name, var: '_drum_drums_0_FluidR3_GM_sf2_fileStandard', file: 'drums_0_FluidR3_GM_sf2_fileStandard.js', cat: 'drum' };
+            
+            if (category === 'Legacy') {
+                const item = INSTRUMENT_LIBRARY['Legacy'].find(i => i.name === name);
+                if(item) return { name: name, cat: 'legacy', legacyId: item.legacyId };
             }
 
-            let item = INSTRUMENT_LIBRARY[category].find(i => i.name === name);
+            
+            if (category === 'Drum Kit') {
+                 const item = INSTRUMENT_LIBRARY['Drum Kit'].find(i => i.name === name);
+                 if(item) {
+                     const id = item.id;
+                     return { 
+                         name: name, 
+                         var: `_drum_${id}_0_FluidR3_GM_sf2_file`, 
+                         file: `128${id}_0_FluidR3_GM_sf2_file.js`, 
+                         cat: 'drum' 
+                     };
+                 }
+                 return null;
+            }
+
+            let item = INSTRUMENT_LIBRARY[category] ? INSTRUMENT_LIBRARY[category].find(i => i.name === name) : null;
             if(!item) return null;
 
-            // Melodic instruments use the GeneralUserGS naming convention based on ID
+            
             const padded = (item.id * 10).toString().padStart(4, '0');
             return { name: name, var: `_tone_${padded}_GeneralUserGS_sf2_file`, file: `${padded}_GeneralUserGS_sf2_file.js`, cat: 'melodic' };
         }
@@ -686,7 +750,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             initSelects(); setupEqualizer(); videoElement = document.getElementById('videoVisualizer'); isAdvancedVisible = localStorage.getItem('synthAdvancedVisible') === 'true'; const advancedContainer = document.getElementById('advancedControlsContainer'); const arrow = document.querySelector('#advancedToggle .arrow'); if(isAdvancedVisible){ advancedContainer.style.display = 'grid'; if(arrow) arrow.style.transform = 'rotate(180deg)'; } else { advancedContainer.style.display = 'none'; if(arrow) arrow.style.transform = 'rotate(0deg)'; } document.getElementById('advancedToggle').addEventListener('click', toggleAdvancedControls); loadSettings(); generateCode(); const sideButtons = document.getElementById('sideButtons'); sideButtons.classList.add(localStorage.getItem('synthButtonSide') || 'left'); currentVisualizerIndex = VISUALIZER_TYPES.indexOf(localStorage.getItem('synthVisualizerType') || 'bars'); if (currentVisualizerIndex === -1) currentVisualizerIndex = 0; drawBlankVisualizer();
             document.getElementById('leftCornerBtn').addEventListener('click', () => { if (sideButtons.classList.contains('right')) toggleButtonSide('left'); }); document.getElementById('rightCornerBtn').addEventListener('click', () => { if (sideButtons.classList.contains('left')) toggleButtonSide('right'); }); document.getElementById('globalTitle').addEventListener('click', cycleMode); loopMode = parseInt(localStorage.getItem('synthLoopMode') || '0', 10); updateLoopButton(); currentThemeIndex = THEMES.indexOf(localStorage.getItem('synthTheme') || 'default'); if (currentThemeIndex === -1) currentThemeIndex = 0; if (THEMES[currentThemeIndex] !== 'default') document.body.classList.add(THEMES[currentThemeIndex]); if (window.innerWidth >= 769) document.getElementById('scrollableControls').appendChild(document.getElementById('codeOutputContainer')); else document.querySelector('.controls-group-right').appendChild(document.getElementById('codeOutputContainer'));
-            const visualizerContainer = document.getElementById('visualizer-container'); visualizerContainer.addEventListener('click', () => { if (currentMode !== 2) document.getElementById('audioFileInput').click(); }); visualizerContainer.addEventListener('dragover', (e) => { e.preventDefault(); e.stopPropagation(); visualizerContainer.classList.add('dragover'); }); visualizerContainer.addEventListener('dragleave', (e) => { e.preventDefault(); e.stopPropagation(); visualizerContainer.classList.remove('dragover'); }); visualizerContainer.addEventListener('drop', (e) => { e.preventDefault(); e.stopPropagation(); visualizerContainer.classList.remove('dragover'); const file = e.dataTransfer.files[0]; if (file) loadAudioFile(file); }); document.getElementById('audioFileInput').addEventListener('change', (e) => { const file = e.target.files[0]; if (file) loadAudioFile(file); }); videoElement.addEventListener('click', () => { if (videoElement.requestFullscreen) videoElement.requestFullscreen(); else if (videoElement.webkitRequestFullscreen) videoElement.webkitRequestFullscreen(); });
+            const visualizerContainer = document.getElementById('visualizer-container'); visualizerContainer.addEventListener('click', () => { if (currentMode !== 2) document.getElementById('audioFileInput').click(); }); visualizerContainer.addEventListener('dragover', (e) => { e.preventDefault(); e.stopPropagation(); visualizerContainer.classList.add('dragover'); }); visualizerContainer.addEventListener('dragleave', (e) => { e.preventDefault(); e.stopPropagation(); visualizerContainer.classList.remove('dragover'); }); visualizerContainer.addEventListener('drop', (e) => { e.preventDefault(); e.stopPropagation(); visualizerContainer.classList.remove('dragover'); const file = e.dataTransfer.files[0]; if (file) { if (file.name.endsWith('.json')) { const reader = new FileReader(); reader.onload = (ev) => DAW.loadProject(ev.target.result); reader.readAsText(file); } else loadAudioFile(file); } }); document.getElementById('audioFileInput').addEventListener('change', (e) => { const file = e.target.files[0]; if (file) loadAudioFile(file); }); videoElement.addEventListener('click', () => { if (videoElement.requestFullscreen) videoElement.requestFullscreen(); else if (videoElement.webkitRequestFullscreen) videoElement.webkitRequestFullscreen(); });
             const linkRate = (id1, id2) => { document.getElementById(id1).addEventListener('input', (e) => { document.getElementById(id2).value = e.target.value; const r = parseFloat(e.target.value); if(audioFileSource) audioFileSource.playbackRate.value = r; if(videoElement.src) videoElement.playbackRate = r; }); }; linkRate('playbackRate', 'playbackRateInput'); linkRate('playbackRateInput', 'playbackRate');
             document.getElementById('reverseBtn').addEventListener('click', reverseAudio); document.getElementById('coverArt').addEventListener('click', () => document.getElementById('coverArtInput').click()); document.getElementById('coverArtInput').addEventListener('change', (e) => { const f = e.target.files[0]; if(f) { const r = new FileReader(); r.onload = (ev) => document.getElementById('coverArt').src = ev.target.result; r.readAsDataURL(f); }}); document.addEventListener('keydown', handleKeyboardShortcuts); document.addEventListener('keyup', handleKeyboardShortcuts);
             const linkEf = (id1, id2, fn) => { document.getElementById(id1).addEventListener('input', (e) => { document.getElementById(id2).value = e.target.value; fn(parseFloat(e.target.value)); }); }; linkEf('editorDistortion', 'editorDistortionInput', (v) => { if (distortionNode) distortionNode.curve = makeDistortionCurve(v); }); linkEf('editorDistortionInput', 'editorDistortion', (v) => { if (distortionNode) distortionNode.curve = makeDistortionCurve(v); }); linkEf('editorReverb', 'editorReverbInput', (v) => { if (wetGainNode) { wetGainNode.gain.setValueAtTime(v, audioContext.currentTime); dryGainNode.gain.setValueAtTime(1-v, audioContext.currentTime); }}); linkEf('editorReverbInput', 'editorReverb', (v) => { if (wetGainNode) { wetGainNode.gain.setValueAtTime(v, audioContext.currentTime); dryGainNode.gain.setValueAtTime(1-v, audioContext.currentTime); }}); linkEf('editorPan', 'editorPanInput', (v) => { if(pannerNode) pannerNode.pan.setValueAtTime(v, audioContext.currentTime); }); linkEf('editorPanInput', 'editorPan', (v) => { if(pannerNode) pannerNode.pan.setValueAtTime(v, audioContext.currentTime); });
@@ -694,6 +758,7 @@
             document.getElementById('exportWavBtn').addEventListener('click', () => startExport('wav')); document.getElementById('exportMp3Btn').addEventListener('click', () => startExport('mp3')); document.getElementById('exportOggBtn').addEventListener('click', () => startExport('ogg')); document.getElementById('closeExportModalBtn').addEventListener('click', hideExportModal); document.getElementById('exportModalBackdrop').addEventListener('click', (e) => { if (e.target.id === 'exportModalBackdrop') hideExportModal(); }); document.getElementById('resetConfirmBtn').addEventListener('click', handleResetConfirm); document.getElementById('resetCancelBtn').addEventListener('click', hideResetModal); document.getElementById('resetModalBackdrop').addEventListener('click', (e) => { if (e.target.id === 'resetModalBackdrop') hideResetModal(); });
             document.getElementById('fxDistortion').addEventListener('input', e => document.getElementById('fxDistortionInput').value = e.target.value); document.getElementById('fxDistortionInput').addEventListener('input', e => document.getElementById('fxDistortion').value = e.target.value); document.getElementById('fxReverb').addEventListener('input', e => document.getElementById('fxReverbInput').value = e.target.value); document.getElementById('fxReverbInput').addEventListener('input', e => document.getElementById('fxReverb').value = e.target.value);
             document.getElementById('closeEffectsModalBtn').addEventListener('click', () => { const m = document.getElementById('effectsModalBackdrop'); m.classList.remove('visible'); setTimeout(() => m.classList.add('hidden'), 300); });
+            document.getElementById('jsonLoadInput').addEventListener('change', (e) => { const f = e.target.files[0]; if(f) { const r = new FileReader(); r.onload = (ev) => DAW.loadProject(ev.target.result); r.readAsText(f); } hideExportModal(); });
             const pb = document.getElementById('progressBarContainer'); let isSeeking = false; const handleSeek = (e) => { if (!audioFileBuffer) return; const rect = pb.getBoundingClientRect(); const x = (e.clientX || e.touches[0].clientX) - rect.left; const t = (Math.max(0, Math.min(1, x / rect.width))) * audioFileBuffer.duration; document.getElementById('progressBar').style.width = `${(t/audioFileBuffer.duration)*100}%`; playbackStartOffset = t; if (videoElement.src) videoElement.currentTime = t; if (isPlaying) { if (audioFileSource) { audioFileSource.onended = null; try { audioFileSource.stop(); } catch(err) {} } playAudioFile(t); } }; pb.addEventListener('mousedown', (e) => { isSeeking = true; handleSeek(e); }); pb.addEventListener('touchstart', (e) => { isSeeking = true; handleSeek(e); }, { passive: true }); window.addEventListener('mousemove', (e) => { if (isSeeking) handleSeek(e); }); window.addEventListener('touchmove', (e) => { if (isSeeking) handleSeek(e); }, { passive: true }); window.addEventListener('mouseup', () => isSeeking = false); window.addEventListener('touchend', () => isSeeking = false);
             DAW.init();
         });
@@ -806,6 +871,16 @@
                 ruler.style.position = 'absolute'; ruler.style.top = '0'; ruler.style.left = '0'; ruler.style.width = '100%'; ruler.style.height = '20px'; ruler.style.cursor = 'pointer'; ruler.style.zIndex = '25';
                 document.getElementById('gridContainer').prepend(ruler);
                 ruler.addEventListener('mousedown', (e) => this.handlePlayheadScrub(e));
+                
+                const gridContainer = document.getElementById('gridContainer');
+                gridContainer.addEventListener('scroll', (e) => {
+                    const sidebar = document.getElementById('keysSidebar');
+                    sidebar.scrollTop = e.target.scrollTop;
+                    if (e.target.scrollLeft + e.target.clientWidth > this.gridCanvas.width - 100) {
+                        this.gridCanvas.width += 1000;
+                        this.drawGrid();
+                    }
+                });
             },
 
             initEqEffects() {
@@ -830,9 +905,13 @@
             },
 
             ensureInstrumentLoaded(category, name) {
+                if (category === 'legacy' || category === 'Legacy') return;
                 this.initPlayer();
                 const instr = getInstrumentData(category, name);
-                if (instr && !window[instr.var]) {
+                
+                if (instr && window[instr.var]) return;
+
+                if (instr) {
                     const globalTitle = document.getElementById('globalTitle');
                     const originalTitle = globalTitle.textContent;
                     globalTitle.textContent = 'Loading...';
@@ -840,9 +919,8 @@
                     const timeout = setTimeout(() => {
                         if (globalTitle.textContent === 'Loading...') {
                             globalTitle.textContent = originalTitle;
-                            alert("Failed to load instrument: " + name + ". File may be missing.");
                         }
-                    }, 10000);
+                    }, 20000);
 
                     this.loader.startLoad(audioContext, 'js/webaudiofontdata/sound/' + instr.file, instr.var);
                     this.loader.waitLoad(() => {
@@ -870,7 +948,6 @@
                 const sidebarEl = document.getElementById('keysSidebar');
                 const gridContainer = document.getElementById('gridContainer');
                 sidebarEl.addEventListener('wheel', (e) => { gridContainer.scrollTop += e.deltaY; });
-                gridContainer.addEventListener('scroll', (e) => { sidebarEl.scrollTop = e.target.scrollTop; });
                 sidebarEl.scrollTop = 600;
             },
             
@@ -982,10 +1059,11 @@
 
             resize() {
                 const container = document.getElementById('gridContainer');
-                const width = Math.max(container.offsetWidth, this.settings.duration * this.pixelsPerSecond);
+                const width = Math.max(container.offsetWidth, this.settings.duration * this.pixelsPerSecond) + 2000;
                 const height = 1280; 
                 this.gridCanvas.width = width;
                 this.gridCanvas.height = height;
+                document.getElementById('playhead').style.height = height + 'px';
                 this.drawGrid();
             },
 
@@ -1011,7 +1089,7 @@
                 const id = Date.now();
                 const track = { id, name: name || category, type: category, instrument: name, data: data || {}, notes: [], muted: false, solo: false, vol: 1, fx: { dist: 0, rev: 0, eq: [0,0,0,0,0,0,0,0,0] } };
                 this.tracks.push(track);
-                if (category !== 'sample' && category !== 'synth') {
+                if (category !== 'sample' && category !== 'synth' && category !== 'legacy' && category !== 'Legacy') {
                     this.ensureInstrumentLoaded(category, name);
                 }
                 this.renderTrackList();
@@ -1039,12 +1117,16 @@
                         m.innerHTML = '';
                         const sampleBtn = document.createElement('button'); 
                         sampleBtn.textContent = 'Sampler'; 
+                        sampleBtn.style.width = '100%';
                         sampleBtn.onclick = () => { DAW.addTrack('sample', 'Sampler'); m.style.display='none'; }; 
                         m.appendChild(sampleBtn);
 
                         Object.keys(INSTRUMENT_LIBRARY).forEach(cat => {
                             const btn = document.createElement('button');
-                            btn.textContent = cat + ' >';
+                            btn.style.display = 'flex';
+                            btn.style.justifyContent = 'space-between';
+                            btn.style.width = '100%';
+                            btn.innerHTML = `<span>${cat}</span><span>▶</span>`;
                             btn.onclick = (ev) => { ev.stopPropagation(); showInstruments(cat); };
                             m.appendChild(btn);
                         });
@@ -1053,14 +1135,16 @@
                     const showInstruments = (cat) => {
                         m.innerHTML = '';
                         const backBtn = document.createElement('button');
-                        backBtn.textContent = '< Back';
+                        backBtn.textContent = '◀ Back';
                         backBtn.style.background = 'rgba(128,128,128,0.3)';
+                        backBtn.style.width = '100%';
                         backBtn.onclick = (ev) => { ev.stopPropagation(); showCategories(); };
                         m.appendChild(backBtn);
 
                         INSTRUMENT_LIBRARY[cat].forEach(inst => {
                             const btn = document.createElement('button');
                             btn.textContent = inst.name;
+                            btn.style.width = '100%';
                             btn.onclick = () => { DAW.addTrack(cat, inst.name); m.style.display='none'; };
                             m.appendChild(btn);
                         });
@@ -1095,7 +1179,10 @@
                     m.innerHTML = '';
                     Object.keys(INSTRUMENT_LIBRARY).forEach(cat => {
                         const btn = document.createElement('button');
-                        btn.textContent = cat + ' >';
+                        btn.style.display = 'flex';
+                        btn.style.justifyContent = 'space-between';
+                        btn.style.width = '100%';
+                        btn.innerHTML = `<span>${cat}</span><span>▶</span>`;
                         btn.onclick = (ev) => { ev.stopPropagation(); showInstruments(cat); };
                         m.appendChild(btn);
                     });
@@ -1104,14 +1191,16 @@
                 const showInstruments = (cat) => {
                     m.innerHTML = '';
                     const backBtn = document.createElement('button');
-                    backBtn.textContent = '< Back';
+                    backBtn.textContent = '◀ Back';
                     backBtn.style.background = 'rgba(128,128,128,0.3)';
+                    backBtn.style.width = '100%';
                     backBtn.onclick = (ev) => { ev.stopPropagation(); showCategories(); };
                     m.appendChild(backBtn);
 
                     INSTRUMENT_LIBRARY[cat].forEach(inst => {
                         const btn = document.createElement('button');
                         btn.textContent = inst.name;
+                        btn.style.width = '100%';
                         btn.onclick = () => DAW.setType(cat, inst.name);
                         m.appendChild(btn);
                     });
@@ -1206,6 +1295,52 @@
                 const m = document.getElementById('effectsModalBackdrop'); m.classList.remove('visible'); setTimeout(()=>m.classList.add('hidden'), 300);
             },
 
+            getFxChain(ctx, track) {
+                const input = ctx.createGain();
+                let output = input;
+
+                if (track.fx.dist > 0) {
+                    const dist = ctx.createWaveShaper();
+                    dist.curve = makeDistortionCurve(track.fx.dist);
+                    dist.oversample = '4x';
+                    output.connect(dist);
+                    output = dist;
+                }
+
+                const freqs = [60, 170, 310, 600, 1000, 3000, 6000, 12000, 14000];
+                if (track.fx.eq && track.fx.eq.some(v => v !== 0)) {
+                    track.fx.eq.forEach((val, i) => {
+                        if (val !== 0) {
+                            const eq = ctx.createBiquadFilter();
+                            eq.type = i === 0 ? 'lowshelf' : (i === 8 ? 'highshelf' : 'peaking');
+                            eq.frequency.value = freqs[i];
+                            eq.gain.value = val;
+                            output.connect(eq);
+                            output = eq;
+                        }
+                    });
+                }
+
+                if (track.fx.rev > 0 && convolverNode) {
+                    const revGain = ctx.createGain();
+                    revGain.gain.value = track.fx.rev;
+                    output.connect(revGain);
+                    
+                    const dryGain = ctx.createGain();
+                    dryGain.gain.value = 1 - track.fx.rev;
+                    output.connect(dryGain);
+                    
+                    revGain.connect(convolverNode);
+                    
+                    const merge = ctx.createGain();
+                    dryGain.connect(merge);
+                    
+                    return { input: input, output: merge };
+                }
+
+                return { input: input, output: output };
+            },
+
             setupGridInteractions() {
                 const grid = document.getElementById('gridContainer');
                 this.gridCanvas.addEventListener('contextmenu', e => { e.preventDefault(); e.stopPropagation(); });
@@ -1217,16 +1352,16 @@
                     if(e.target.classList.contains('note-block') || e.target.classList.contains('note-resize-handle')) return;
                     if(e.button === 2) { this.showGridContext(e); return; }
                     
+                    const rect = grid.getBoundingClientRect();
+                    const x = e.clientX - rect.left + grid.scrollLeft;
+                    const y = e.clientY - rect.top + grid.scrollTop;
+
                     if(this.mobileResizeMode) {
                         this.mobileResizeMode = false;
                         this.mobileResizeTarget = null;
                         this.renderNotes();
                         return;
                     }
-                    
-                    const rect = grid.getBoundingClientRect();
-                    const x = e.clientX - rect.left + grid.scrollLeft;
-                    const y = e.clientY - rect.top + grid.scrollTop;
                     
                     if (this.toolMode === 'lasso') {
                         this.selectionStart = { x: e.clientX - rect.left + grid.scrollLeft, y: e.clientY - rect.top + grid.scrollTop };
@@ -1244,10 +1379,11 @@
                         return;
                     }
                     
-                    if (!this.drawMode) {
+                    if (!this.drawMode || e.shiftKey) {
                          const time = x / this.pixelsPerSecond;
                          if(audioContext) this.startTime = audioContext.currentTime - time;
                          document.getElementById('playhead').style.left = x + 'px';
+                         this.handlePlayheadScrub(e);
                          return;
                     }
 
@@ -1410,9 +1546,10 @@
                 this.initPlayer();
 
                 const transposePitch = pitch + this.transpose;
+                const ctx = audioContext;
+                const fx = this.getFxChain(ctx, track);
                 
                 if (track.type === 'sample' && track.data.buffer) {
-                    const ctx = audioContext;
                     const source = ctx.createBufferSource();
                     source.buffer = track.data.buffer;
                     const freq = 440 * Math.pow(2, (transposePitch - 69) / 12);
@@ -1420,18 +1557,48 @@
                     const gain = ctx.createGain();
                     gain.gain.value = track.vol;
                     source.connect(gain);
-                    gain.connect(masterGainNode);
+                    gain.connect(fx.input);
+                    fx.output.connect(masterGainNode);
                     source.start(0);
                     this.playingNotes[pitch] = { source, gain };
                 } else {
                     const instr = getInstrumentData(track.type, track.instrument);
-                    // Only attempt to play if instrument is loaded to avoid errors
-                    if (instr && window[instr.var]) {
+                    if (instr && instr.cat === 'legacy') {
+                        const freq = 440 * Math.pow(2, (transposePitch - 69) / 12);
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        
+                        gain.gain.value = track.vol;
+                        osc.frequency.setValueAtTime(freq, ctx.currentTime);
+                        
+                        let n = osc;
+                        
+                        if(instr.legacyId === 'bell') {
+                            osc.type = 'sine';
+                            const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 800;
+                            n.connect(hp); n = hp;
+                        } else if(instr.legacyId === 'pad') {
+                            osc.type = 'triangle';
+                            const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 1000;
+                            n.connect(lp); n = lp;
+                        } else if(instr.legacyId === '8bit') {
+                            osc.type = 'square';
+                        } else {
+                            osc.type = 'triangle';
+                        }
+
+                        n.connect(gain);
+                        gain.connect(fx.input);
+                        fx.output.connect(masterGainNode);
+                        osc.start(0);
+                        this.playingNotes[pitch] = { source: osc, gain: gain, legacy: true };
+
+                    } else if (instr && window[instr.var]) {
                         const preset = window[instr.var];
-                        const envelope = this.player.queueWaveTable(audioContext, masterGainNode, preset, audioContext.currentTime, transposePitch, 999, track.vol);
+                        const envelope = this.player.queueWaveTable(audioContext, fx.input, preset, audioContext.currentTime, transposePitch, 999, track.vol);
+                        fx.output.connect(masterGainNode);
                         this.playingNotes[pitch] = envelope;
                     } else {
-                        // Optionally trigger load if not present, though usually handled by setType/addTrack
                         if(instr && !window[instr.var]) this.ensureInstrumentLoaded(track.type, track.instrument);
                     }
                 }
@@ -1445,7 +1612,6 @@
             },
 
             stopRealtimeNote(pitch) {
-                // Visual Cleanup must happen regardless of whether audio played
                 const key = document.querySelector(`.piano-key[data-pitch="${pitch}"]`); 
                 if(key) key.classList.remove('active');
 
@@ -1458,8 +1624,13 @@
                         try {
                             const t = audioContext.currentTime;
                             note.gain.gain.cancelScheduledValues(t);
-                            note.gain.gain.linearRampToValueAtTime(0, t + 0.1);
-                            note.source.stop(t + 0.1);
+                            if(note.legacy) {
+                                note.gain.gain.linearRampToValueAtTime(0, t + 0.1);
+                                note.source.stop(t + 0.1);
+                            } else {
+                                note.gain.gain.linearRampToValueAtTime(0, t + 0.1);
+                                note.source.stop(t + 0.1);
+                            }
                         } catch(e) {}
                     }
                     delete this.playingNotes[pitch];
@@ -1471,14 +1642,12 @@
                     let dur = playTime - start;
                     if(dur < 0) dur += this.settings.duration;
                     
-                    // Apply snapping only if BPM Checkbox is active
                     if (this.settings.useBpm) {
                         const beat = 60 / this.settings.bpm; 
                         const snap = beat / (this.settings.snap / 4);
                         start = Math.floor(start / snap) * snap;
                         dur = Math.max(snap, Math.round(dur / snap) * snap);
                     } else {
-                        // Round slightly to avoid crazy decimals, but effectively "free"
                         start = parseFloat(start.toFixed(3));
                         dur = parseFloat(dur.toFixed(3));
                     }
@@ -1493,9 +1662,10 @@
                 if(!audioContext) initContext();
                 this.initPlayer();
                 const transposePitch = pitch + this.transpose;
+                const ctx = audioContext;
+                const fx = this.getFxChain(ctx, track);
 
                 if (track.type === 'sample' && track.data.buffer) {
-                    const ctx = audioContext;
                     const src = ctx.createBufferSource();
                     src.buffer = track.data.buffer;
                     const freq = 440 * Math.pow(2, (transposePitch - 69) / 12);
@@ -1503,14 +1673,57 @@
                     const gain = ctx.createGain();
                     gain.gain.value = track.vol;
                     src.connect(gain);
-                    gain.connect(masterGainNode);
+                    gain.connect(fx.input);
+                    fx.output.connect(masterGainNode);
                     src.start(time);
                     src.stop(time + dur);
                 } else {
                     const instr = getInstrumentData(track.type, track.instrument);
-                    if (instr && window[instr.var]) {
+                    
+                    if(instr && instr.cat === 'legacy') {
+                        const freq = 440 * Math.pow(2, (transposePitch - 69) / 12);
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        
+                        gain.gain.setValueAtTime(0, time);
+                        
+                        let n = osc;
+                        let attack = 0.01;
+                        let release = 0.1;
+
+                        if(instr.legacyId === 'bell') {
+                            osc.type = 'sine';
+                            const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 800;
+                            n.connect(hp); n = hp;
+                            release = 1.0;
+                        } else if(instr.legacyId === 'pad') {
+                            osc.type = 'triangle';
+                            const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 1000;
+                            n.connect(lp); n = lp;
+                            attack = 0.5; release = 1.0;
+                        } else if(instr.legacyId === '8bit') {
+                            osc.type = 'square';
+                            attack = 0.01; release = 0.05;
+                        } else {
+                            osc.type = 'triangle';
+                        }
+
+                        osc.frequency.setValueAtTime(freq, time);
+                        n.connect(gain);
+                        gain.connect(fx.input);
+                        fx.output.connect(masterGainNode);
+                        
+                        gain.gain.linearRampToValueAtTime(track.vol, time + attack);
+                        gain.gain.setValueAtTime(track.vol, time + dur - 0.01);
+                        gain.gain.linearRampToValueAtTime(0, time + dur + release);
+                        
+                        osc.start(time);
+                        osc.stop(time + dur + release);
+
+                    } else if (instr && window[instr.var]) {
                         const preset = window[instr.var];
-                        this.player.queueWaveTable(audioContext, masterGainNode, preset, time, transposePitch, dur, track.vol);
+                        this.player.queueWaveTable(audioContext, fx.input, preset, time, transposePitch, dur, track.vol);
+                        fx.output.connect(masterGainNode);
                     }
                 }
             },
@@ -1540,7 +1753,6 @@
                 this.tracks = []; this.history = []; this.historyIndex = -1; this.addTrack('Piano', 'Acoustic Grand Piano'); 
                 this.settings = { bpm: 120, duration: 30, snap: 16 };
                 this.transpose = 1;
-                // Reset GUI elements
                 if(document.getElementById('wsBpm')) document.getElementById('wsBpm').value = 120;
                 document.getElementById('wsTimeLimit').value = "00:00:30";
                 document.getElementById('wsTranspose').value = 1;
@@ -1560,6 +1772,19 @@
                 const dur = this.settings.duration; const ctx = new OfflineAudioContext(2, 44100 * dur, 44100);
                 this.initPlayer();
                 alert("Offline export for WebAudioFont instruments is limited in this demo. Only samples and simple synths will export correctly.");
+            },
+            saveProject() {
+                const data = JSON.stringify({ tracks: this.tracks, settings: this.settings });
+                const blob = new Blob([data], { type: 'application/json' });
+                downloadBlob(blob, 'project.json');
+            },
+            loadProject(json) {
+                try {
+                    this.loadState(json);
+                    alert('Project loaded successfully!');
+                } catch(e) {
+                    alert('Error loading project.');
+                }
             }
         };
         
