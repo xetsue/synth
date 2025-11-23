@@ -42,6 +42,24 @@ Importing now supports all media types as long as audio codec is present such as
 ><img width="1882" height="922" alt="image" src="https://github.com/user-attachments/assets/91fe847c-45ed-4f42-be87-e2f8521f0bf8" />
 ><img width="1406" height="845" alt="image" src="https://github.com/user-attachments/assets/e644100b-c893-42e0-984e-472ebe0c3a70" />
 
+## ./WORKSTATION
+Usage: A lightweight Digital Audio Workstation (DAW) environment for sequencing tracks.
+
+> **Features**
+
+- Multi-track sequencing with Piano Roll interface.
+- Support for Samples (imported from Editor), Legacy Synths, and WebAudioFont Instruments.
+- Per-track Effects (Distortion, Reverb, EQ).
+- Global Project settings (BPM, Duration, Snap).
+- Export full mix to `.wav`, `.mp3`, and `.ogg`.
+
+> **Controls**
+
+`Keys` Toggle mobile/virtual keyboard.
+`♫/✥` Switch between Draw Mode (add notes) and Lasso Mode (select multiple).
+`REC` Real-time MIDI recording via keyboard or touch.
+`Undo/Redo` History state management.
+
 ## ./Requirements are included by default.
 
 ## Notice / Milestone
