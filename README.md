@@ -1,6 +1,17 @@
-## Web Lightweight Digital Audio Workstation, Synthesizer and Audio Editor
-[Screenshots](https://github.com/xetsue/synth/blob/main/README.md#screenshots)] [Synthesizer](https://github.com/xetsue/synth/blob/main/README.md#synth) [Editor](https://github.com/xetsue/synth/blob/main/README.md#editor) [Digital-Audio-Workstation](https://github.com/xetsue/synth/blob/main/README.md#workstation)
+## Web Digital Audio Workstation, Synthesizer and Audio Editor
+><img width="200" height="200" alt="image" src="https://github.com/user-attachments/assets/50669351-f73a-4b1d-9707-29266bda6bb7" />
+><img width="180" height="180" alt="image" src="https://github.com/user-attachments/assets/322588b9-4483-4cb8-aed1-236219dccf50" />
+><img width="150" height="150" alt="image" src="https://github.com/user-attachments/assets/e4a73dbe-ae97-4cbc-a634-43b6b4c710ac" />
+><img width="125" height="125" alt="image" src="https://github.com/user-attachments/assets/8f0453e1-286e-4e0d-b682-947617c0797e" />
+><img width="100" height="100" alt="image" src="https://github.com/user-attachments/assets/cd9bd3f1-d246-4159-b98d-605157056fc1" />
+><img width="80" height="80" alt="image" src="https://github.com/user-attachments/assets/6245e068-1585-4a93-9ce4-4b079538d5db" />
+
+
+![xsu-blink64](https://github.com/user-attachments/assets/de6d2e23-aae2-4353-837f-00db3967ba05)  | [Screenshots](https://github.com/xetsue/synth/blob/main/README.md#screenshots) | [Synthesizer](https://github.com/xetsue/synth/blob/main/README.md#synth) | [Editor](https://github.com/xetsue/synth/blob/main/README.md#editor) | [Digital-Audio-Workstation](https://github.com/xetsue/synth/blob/main/README.md#workstation) | [Usage](https://github.com/xetsue/synth/blob/main/README.md#usage) | ![xsu-blink64](https://github.com/user-attachments/assets/de6d2e23-aae2-4353-837f-00db3967ba05) 
+
+---
 # ./SYNTH
+
 Primary feature: Audio synthesizer oscilloscope inspired test in browser without using any audio file or third party softwares.
 
 Uses local Browser / Web Audio API to synthesize digital sound effects with options.
@@ -55,21 +66,25 @@ The audio synthesizer - `./SYNTH.` is a demonstration which uses your browser's 
 
 > **Controls**
 
-`Keys` Toggle mobile/virtual keyboard.
-`♫/✥` Switch between Draw Mode (add notes) and Lasso Mode (select multiple).
-`REC` Real-time MIDI recording via keyboard or touch.
-`Undo/Redo` History state management.
+- `Keys` Toggle mobile/virtual keyboard.
+- `♫/✥` Switch between Draw Mode (add notes) and Lasso Mode (select multiple).
+- `REC` Real-time MIDI recording via keyboard or touch.
+- `Undo/Redo` History state management. [CTRL+Z/Y | CTRL+SHIFT+Z]
+- `Copy` selected notes [CTRL+C]
+- `Paste` from canvas clipboard [CTRL+V]
+- `Delete` noteblocks [BACKSPACE]
+- `Duplicate` selected notes [CTRL+D]
+
 ## Screenshots
 ><img width="1902" height="980" alt="image" src="https://github.com/user-attachments/assets/50669351-f73a-4b1d-9707-29266bda6bb7" />
 ><img width="1899" height="984" alt="image" src="https://github.com/user-attachments/assets/322588b9-4483-4cb8-aed1-236219dccf50" />
 ><img width="1898" height="980" alt="image" src="https://github.com/user-attachments/assets/536dda86-227d-41e0-b80b-4b33e5f3c64a" />
+><img width="1897" height="976" alt="image" src="https://github.com/user-attachments/assets/fca898ff-92de-4a9d-9b0b-2f6786b616eb" />
 ><img width="1896" height="983" alt="image" src="https://github.com/user-attachments/assets/8f0453e1-286e-4e0d-b682-947617c0797e" />
-><img width="1896" height="983" alt="image" src="https://github.com/user-attachments/assets/cd9bd3f1-d246-4159-b98d-605157056fc1" />
+><img width="1891" height="978" alt="image" src="https://github.com/user-attachments/assets/6efa1a92-2f1f-4eae-9068-9de2e236d951" />
 ><img width="1881" height="924" alt="image" src="https://github.com/user-attachments/assets/6245e068-1585-4a93-9ce4-4b079538d5db" />
 ><img width="1896" height="925" alt="image" src="https://github.com/user-attachments/assets/a0ce806e-a241-4378-9bc3-0bf9906e0f14" />
 ><img width="1893" height="922" alt="image" src="https://github.com/user-attachments/assets/4720b345-6384-4fc6-89b9-9754cf1c99f3" />
-><img width="1887" height="907" alt="image" src="https://github.com/user-attachments/assets/1500ebc0-2390-4e2e-8060-8fb9a6ab59a0" />
-><img width="1882" height="922" alt="image" src="https://github.com/user-attachments/assets/91fe847c-45ed-4f42-be87-e2f8521f0bf8" />
 ><img width="1406" height="845" alt="image" src="https://github.com/user-attachments/assets/e644100b-c893-42e0-984e-472ebe0c3a70" />
 
 
