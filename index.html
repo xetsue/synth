@@ -333,7 +333,7 @@
         .note-resize-handle { position: absolute; right: 0; top: 0; width: 5px; height: 100%; cursor: e-resize; }
         #selectionRect { position: absolute; background: var(--selection-rect); border: 1px solid var(--note-bg); z-index: 15; display: none; pointer-events: none; }
         
-        #playhead { position: absolute; top: 0; width: 2px; height: 100%; background: var(--loop-alt-color); z-index: 20; pointer-events: auto; cursor: pointer; left: 0; will-change: transform; transform: translateZ(0); }
+        #playhead { position: absolute; top: 0; width: 2px; height: 100%; background: var(--loop-alt-color); z-index: 15; pointer-events: auto; cursor: pointer; left: 0; will-change: transform; transform: translateZ(0); }
         #playhead:hover { width: 4px; margin-left: -1px; }
         
         #ws-playlist-name { background: transparent; border: none; border-bottom: 1px solid var(--border-color); color: var(--text-color); font-family: inherit; font-size: 1em; width: 150px; }
@@ -548,9 +548,14 @@
             
             #wsVisualizerContainer {
                 position: fixed;
-                top: 49px; left: 0; right: 0;
-                width: 100%; height: 150px;
-                border: none; border-bottom: 1.7px solid var(--border-color);
+                top: 50px; left: 0; right: 0;
+                width: 100%; height: 100px; 
+                border: none;
+                border-top: 1.7px dotted var(--border-color);
+                border-bottom: 1.7px solid var(--border-color);
+                opacity: 0.95;
+                backdrop-filter: blur(10px);
+                -webkit-backdrop-filter: blur(10px); 
                 z-index: 2000;
             }
         }
@@ -2372,14 +2377,14 @@
                 let menuContent = '';
                 if(hasSelection) {
                     menuContent += `
-                    <button onclick="event.stopPropagation(); DAW.gridCut(); document.getElementById('gridContextMenu').style.display='none';">Cut</button>
-                    <button onclick="event.stopPropagation(); DAW.gridCopy(); document.getElementById('gridContextMenu').style.display='none';">Copy</button>
-                    <button onclick="event.stopPropagation(); DAW.gridDelete(); document.getElementById('gridContextMenu').style.display='none';">Delete</button>
+                    <button onclick="event.stopPropagation(); DAW.gridCut(); document.getElementById('gridContextMenu').style.display='none';">Cut - [CTRL+X]</button>
+                    <button onclick="event.stopPropagation(); DAW.gridCopy(); document.getElementById('gridContextMenu').style.display='none';">Copy - [CTRL+C]</button>
+                    <button onclick="event.stopPropagation(); DAW.gridDelete(); document.getElementById('gridContextMenu').style.display='none';">Delete - [BACKSPACE]</button>
                     `;
                 }
 
                 menuContent += `
-                    <button onclick="event.stopPropagation(); DAW.gridPaste(); document.getElementById('gridContextMenu').style.display='none';">Paste</button>
+                    <button onclick="event.stopPropagation(); DAW.gridPaste(); document.getElementById('gridContextMenu').style.display='none';">Paste - [CTRL+V]</button>
                     <button onclick="event.stopPropagation(); DAW.selectAllNotes(); document.getElementById('gridContextMenu').style.display='none';">Select All</button> 
                     <button onclick="event.stopPropagation(); DAW.toggleMobileSelect(); document.getElementById('gridContextMenu').style.display='none';" ${this.mobileSelectMode ? highlightStyle : ''}>Select Mode</button>
                     <button onclick="event.stopPropagation(); DAW.toggleMobileResize(); document.getElementById('gridContextMenu').style.display='none';" ${this.mobileResizeMode ? highlightStyle : ''}>Resize Mode</button>
