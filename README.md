@@ -1,5 +1,5 @@
 ## Web Lightweight Digital Audio Workstation, Synthesizer and Audio Editor
-Screenshots are attached (Here)[]
+Screenshots are attached (Here)[https://github.com/xetsue/synth/blob/main/README.md##workstation]
 # ./SYNTH
 Primary feature: Audio synthesizer oscilloscope inspired test in browser without using any audio file or third party softwares.
 
@@ -59,7 +59,7 @@ The audio synthesizer - `./SYNTH.` is a demonstration which uses your browser's 
 `♫/✥` Switch between Draw Mode (add notes) and Lasso Mode (select multiple).
 `REC` Real-time MIDI recording via keyboard or touch.
 `Undo/Redo` History state management.
-
+## Screenshots
 ><img width="1902" height="980" alt="image" src="https://github.com/user-attachments/assets/50669351-f73a-4b1d-9707-29266bda6bb7" />
 ><img width="1899" height="984" alt="image" src="https://github.com/user-attachments/assets/322588b9-4483-4cb8-aed1-236219dccf50" />
 ><img width="1898" height="980" alt="image" src="https://github.com/user-attachments/assets/536dda86-227d-41e0-b80b-4b33e5f3c64a" />
