@@ -198,7 +198,9 @@
         label { font-weight: bold; margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center; font-size: 0.9em; }
         .value-input-group { display: flex; gap: 10px; align-items: center; width: 100%; }
         input[type="range"] { flex-grow: 1; margin: 0; -webkit-appearance: none; background: var(--border-color); height: 2px; cursor: pointer; }
-        input[type="range"].vertical { writing-mode: bt-lr; vertical-lr; direction: rtl; width: 8px; height: 100px; padding: 0 5px; }
+		input[type="range"].vertical { writing-mode: bt-lr; -webkit-appearance: slider-vertical; width: 8px; height: 100px; padding: 0 5px; }
+        /* input[type="range"].vertical { writing-mode: bt-lr; vertical-lr; direction: rtl; width: 8px; height: 100px; padding: 0 5px; }*/
+		/* This may come off as deprecated warning in web console, but I still prefer oldschool timey. */
         input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 10px; height: 10px; border-radius: 0; background: var(--text-color); border: 1px solid var(--border-color); }
         .value-input, select { width: 70px; padding: 5px; background-color: var(--bg-color); color: var(--text-color); border: 1px solid var(--border-color); font-family: inherit; font-size: 0.9em; text-align: right; border-radius: 4px; }
         select { width: 100%; box-sizing: border-box; border-radius: 4px; text-align: left; text-align-last: left; min-width: 120px; }
