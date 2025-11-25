@@ -670,7 +670,7 @@
                 <div class="ws-info-group"><label>Timer</label><input type="text" id="wsTimeLimit" value="00:00:30" onchange="DAW.updateSettings()" style="width: 100px;"></div>
                 <div class="ws-info-group"><label>Grid</label><select id="wsGridSnap" onchange="DAW.updateSettings()" style="width: 60px;"><option value="4">1/4</option><option value="8">1/8</option><option value="16" selected>1/16</option><option value="32">1/32</option></select></div>
                 <div class="ws-info-group"><label>Pitch</label><div class="value-input-group"><input type="range" id="wsTranspose" min="-12" max="12" step="1" value="1" oninput="DAW.updateTranspose(this.value)"><input type="number" id="wsTransposeInput" value="1" oninput="DAW.updateTranspose(this.value)" style="width: 40px;"></div></div>
-				<div class="ws-info-group"><label>Vol</label><div class="value-input-group" style="width: 100px;"><input type="range" id="wsTrackVol" min="0" max="2" step="0.1" value="0.5" oninput="DAW.updateTrackVol(this)"><input type="number" id="wsTrackVolInput" min="0" max="2" step="0.1" value="0.5" oninput="DAW.updateTrackVol(this)" onchange="if(this.value.startsWith('.')) this.value='0'+this.value; DAW.updateTrackVol(this)" style="width: 35px;"></div></div>
+				<div class="ws-info-group"><label>Vol</label><div class="value-input-group" style="width: 100px;"><input type="range" id="wsTrackVol" min="0" max="2" step="0.1" value="0.5" oninput="DAW.updateTrackVol(this)"><input type="number" id="wsTrackVolInput" min="0" max="2" step="0.05" value="0.5" oninput="DAW.updateTrackVol(this)" onchange="if(this.value.startsWith('.')) this.value='0'+this.value; DAW.updateTrackVol(this)" style="width: 35px;"></div></div>
                 <div class="ws-info-group"><button onclick="DAW.cycleVisualizer()">⌘</button></div>
             </div>
         </div>
@@ -1670,7 +1670,7 @@
 
             addTrack(category, name, data) {
                 const id = Date.now();
-                const track = { id, name: name || category, type: category, instrument: name, data: data || {}, notes: [], muted: false, solo: false, vol: 0.7, fx: { dist: 0, rev: 0, bit: 16, eq: [0,0,0,0,0,0,0,0,0] }, transpose: 0, color: '#ffffff' };
+                const track = { id, name: name || category, type: category, instrument: name, data: data || {}, notes: [], muted: false, solo: false, vol: 0.5, fx: { dist: 0, rev: 0, bit: 16, eq: [0,0,0,0,0,0,0,0,0] }, transpose: 0, color: '#ffffff' };
                 this.tracks.push(track);
                 if (category !== 'sample' && category !== 'synth' && category !== 'legacy' && category !== 'Legacy') {
                     this.ensureInstrumentLoaded(category, name);
