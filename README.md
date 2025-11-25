@@ -1,4 +1,4 @@
-# Digital Audio Workstation Lite, Synthesizer and Audio Editor
+# Web Lightweight Digital Audio Workstation, Synthesizer and Audio Editor
 
 ## ./SYNTH
 Primary feature: Audio synthesizer oscilloscope inspired test in browser without using any audio file or third party softwares.
