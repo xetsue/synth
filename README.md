@@ -1,6 +1,6 @@
-# Web Lightweight Digital Audio Workstation, Synthesizer and Audio Editor
-
-## ./SYNTH
+## Web Lightweight Digital Audio Workstation, Synthesizer and Audio Editor
+Screenshots are attached (Here)[]
+# ./SYNTH
 Primary feature: Audio synthesizer oscilloscope inspired test in browser without using any audio file or third party softwares.
 
 Uses local Browser / Web Audio API to synthesize digital sound effects with options.
@@ -19,7 +19,7 @@ Uses local Browser / Web Audio API to synthesize digital sound effects with opti
 
 #### `[Load Files]` — Click on visualizer display panel ( Drag and drop is also supported ) 
 
-## ./EDITOR
+# ./EDITOR
 Usage: Tap Display Visualizer / Drag and drop files to the visualizer to load any audio files.
 
 > **Update Patches**
@@ -35,22 +35,15 @@ Importing now supports all media types as long as audio codec is present such as
 - Equalizer low-focal-mid-high-highes
 - Converts to [ `.mp3` `.wav` `.ogg` ]
 
-><img width="1902" height="980" alt="image" src="https://github.com/user-attachments/assets/50669351-f73a-4b1d-9707-29266bda6bb7" />
-><img width="1899" height="984" alt="image" src="https://github.com/user-attachments/assets/322588b9-4483-4cb8-aed1-236219dccf50" />
-><img width="1898" height="980" alt="image" src="https://github.com/user-attachments/assets/536dda86-227d-41e0-b80b-4b33e5f3c64a" />
-><img width="1896" height="983" alt="image" src="https://github.com/user-attachments/assets/8f0453e1-286e-4e0d-b682-947617c0797e" />
-><img width="1896" height="983" alt="image" src="https://github.com/user-attachments/assets/cd9bd3f1-d246-4159-b98d-605157056fc1" />
-><img width="1881" height="924" alt="image" src="https://github.com/user-attachments/assets/6245e068-1585-4a93-9ce4-4b079538d5db" />
-><img width="1896" height="925" alt="image" src="https://github.com/user-attachments/assets/a0ce806e-a241-4378-9bc3-0bf9906e0f14" />
-><img width="1893" height="922" alt="image" src="https://github.com/user-attachments/assets/4720b345-6384-4fc6-89b9-9754cf1c99f3" />
-><img width="1887" height="907" alt="image" src="https://github.com/user-attachments/assets/1500ebc0-2390-4e2e-8060-8fb9a6ab59a0" />
-><img width="1882" height="922" alt="image" src="https://github.com/user-attachments/assets/91fe847c-45ed-4f42-be87-e2f8521f0bf8" />
-><img width="1406" height="845" alt="image" src="https://github.com/user-attachments/assets/e644100b-c893-42e0-984e-472ebe0c3a70" />
 
-## ./WORKSTATION
-Usage: A lightweight Digital Audio Workstation (DAW) environment for sequencing tracks.
-This was achieved with [WebAudioFont](https://github.com/surikov/webaudiofont) 
-The audio synthesizer is a demonstration which uses sample-based synthesis to play musical instruments in the browser with purely codes without any audio files.
+# ./WORKSTATION.
+A lightweight Digital Audio Workstation (DAW) environment for sequencing tracks.
+This was achieved with [WebAudioFont](https://github.com/surikov/webaudiofont) , [MidiWriterJS](https://github.com/grimmdude/MidiWriterJS#readme) and [](https://github.com/Tonejs/Midi)
+The audio synthesizer - `./SYNTH.` is a demonstration which uses your browser's Web Audio Api synthesis with purely and without any audio files needed. The workstation instruments have the same nature as this preview.
+
+`MIDI` - This is a protocol that sends instructions, not sound. It transmits data which your browser read and translates to something like "Play Note C4," "Press hard (velocity)," and "Stop playing." Since it relies on the browser's audio api, this allow the code to be written in strings of codes making it extremely lightweight because it contains no audio files. 
+
+`WebAudioFont` - A JavaScript library for the browser. It loads instrument samples (SoundFonts) into the browser's Web Audio API. In this app specifically, MIDI can sometimes refer to WebAudioFont to search for related instuments and translates it into a playable sequence.
 
 > **Features**
 
@@ -66,6 +59,19 @@ The audio synthesizer is a demonstration which uses sample-based synthesis to pl
 `♫/✥` Switch between Draw Mode (add notes) and Lasso Mode (select multiple).
 `REC` Real-time MIDI recording via keyboard or touch.
 `Undo/Redo` History state management.
+
+><img width="1902" height="980" alt="image" src="https://github.com/user-attachments/assets/50669351-f73a-4b1d-9707-29266bda6bb7" />
+><img width="1899" height="984" alt="image" src="https://github.com/user-attachments/assets/322588b9-4483-4cb8-aed1-236219dccf50" />
+><img width="1898" height="980" alt="image" src="https://github.com/user-attachments/assets/536dda86-227d-41e0-b80b-4b33e5f3c64a" />
+><img width="1896" height="983" alt="image" src="https://github.com/user-attachments/assets/8f0453e1-286e-4e0d-b682-947617c0797e" />
+><img width="1896" height="983" alt="image" src="https://github.com/user-attachments/assets/cd9bd3f1-d246-4159-b98d-605157056fc1" />
+><img width="1881" height="924" alt="image" src="https://github.com/user-attachments/assets/6245e068-1585-4a93-9ce4-4b079538d5db" />
+><img width="1896" height="925" alt="image" src="https://github.com/user-attachments/assets/a0ce806e-a241-4378-9bc3-0bf9906e0f14" />
+><img width="1893" height="922" alt="image" src="https://github.com/user-attachments/assets/4720b345-6384-4fc6-89b9-9754cf1c99f3" />
+><img width="1887" height="907" alt="image" src="https://github.com/user-attachments/assets/1500ebc0-2390-4e2e-8060-8fb9a6ab59a0" />
+><img width="1882" height="922" alt="image" src="https://github.com/user-attachments/assets/91fe847c-45ed-4f42-be87-e2f8521f0bf8" />
+><img width="1406" height="845" alt="image" src="https://github.com/user-attachments/assets/e644100b-c893-42e0-984e-472ebe0c3a70" />
+
 
 ### ./Requirements are included by default.
 
