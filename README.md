@@ -1,5 +1,5 @@
 ## Web Lightweight Digital Audio Workstation, Synthesizer and Audio Editor
-Screenshots are attached (Here)[https://github.com/xetsue/synth/blob/main/README.md##workstation]
+[Screenshots](https://github.com/xetsue/synth/blob/main/README.md#screenshots)] [Synthesizer](https://github.com/xetsue/synth/blob/main/README.md#synth) [Editor](https://github.com/xetsue/synth/blob/main/README.md#editor) [Digital-Audio-Workstation](https://github.com/xetsue/synth/blob/main/README.md#workstation)
 # ./SYNTH
 Primary feature: Audio synthesizer oscilloscope inspired test in browser without using any audio file or third party softwares.
 
