@@ -7,7 +7,7 @@
 ><img width="80" height="80" alt="image" src="https://github.com/user-attachments/assets/6245e068-1585-4a93-9ce4-4b079538d5db" />
 
 
-![xsu-blink64](https://github.com/user-attachments/assets/de6d2e23-aae2-4353-837f-00db3967ba05)  | [Screenshots](https://github.com/xetsue/synth/blob/main/README.md#screenshots) | [Synthesizer](https://github.com/xetsue/synth/blob/main/README.md#synth) | [Editor](https://github.com/xetsue/synth/blob/main/README.md#editor) | [Digital-Audio-Workstation](https://github.com/xetsue/synth/blob/main/README.md#workstation) | [Usage](https://github.com/xetsue/synth/blob/main/README.md#usage) | ![xsu-blink64](https://github.com/user-attachments/assets/de6d2e23-aae2-4353-837f-00db3967ba05) 
+| [Screenshots](https://github.com/xetsue/synth/blob/main/README.md#screenshots) | [Synthesizer](https://github.com/xetsue/synth/blob/main/README.md#synth) | [Editor](https://github.com/xetsue/synth/blob/main/README.md#editor) | [Digital-Audio-Workstation](https://github.com/xetsue/synth/blob/main/README.md#workstation) | [Usage](https://github.com/xetsue/synth/blob/main/README.md#usage) | ![xsu-blink64](https://github.com/user-attachments/assets/de6d2e23-aae2-4353-837f-00db3967ba05) 
 
 ---
 # ./SYNTH
